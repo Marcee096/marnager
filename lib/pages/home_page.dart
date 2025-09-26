@@ -574,7 +574,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 10.0),
             // Aquí puedes agregar una lista o gráficos de las fuentes de ingresos
             const Text(
-              'Aquí van las fuentes de ingresos...',
+              'Fotos de los ingresos mas el boton para agregar nuevas fuentes',
               style: TextStyle(fontSize: 16.0),
             ),
           ],
