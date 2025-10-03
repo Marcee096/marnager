@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/pages/ahorros_page.dart' show AhorrosPage;
+import 'package:marnager/pages/gastos_page.dart';
+import 'package:marnager/pages/home_page.dart';
 
 class IngresosPage extends StatefulWidget {
   const IngresosPage({super.key});
@@ -10,6 +13,7 @@ class IngresosPage extends StatefulWidget {
 class _IngresosPageState extends State<IngresosPage> {
   String? _opcionSeleccionadaDropdown;
   String? ingresoSeleccionado;
+  
 
   final List<String> _ingresos = [
     //ejemplos, esta lista debe obtenerse de una BD
@@ -27,6 +31,61 @@ class _IngresosPageState extends State<IngresosPage> {
         backgroundColor: Color.fromARGB(255, 61, 56, 245),
       ),
       body: ListView(padding: const EdgeInsets.all(10.0), children: [_cardFuente()]),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 0,
+        selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
+        unselectedItemColor: const Color.fromARGB(255, 158, 158, 158),
+        unselectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 158, 158, 158),
+        ),
+        selectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 61, 56, 245),
+        ),
+        onTap: (index) {
+
+          // Navegación basada en el índice seleccionado
+          switch (index) {
+            case 0:
+              //ya estamos en ingresos
+              break;
+            case 1:
+              // Navegar a página de Gastos
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GastosPage()),
+              );
+              break;
+            case 2:
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => HomePage()));
+              break;
+            case 3:
+              // Navegar a página de Ahorros
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AhorrosPage()),
+              );
+              break;
+            case 4:
+              // Navegar a página de Más opciones
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.arrow_upward),
+            label: 'Ingresos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.arrow_downward),
+            label: 'Gastos',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.savings), label: 'Ahorros'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
+        ],
+      ),
     );
   }
 

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/pages/gastos_page.dart';
+import 'package:marnager/pages/home_page.dart';
+import 'package:marnager/pages/ingresos_page.dart';
 
 class AhorrosPage extends StatefulWidget {
   const AhorrosPage({super.key});
@@ -28,6 +31,60 @@ class _AhorrosPageState extends State<AhorrosPage> {
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoria()]),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: 3,
+        selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
+        unselectedItemColor: const Color.fromARGB(255, 158, 158, 158),
+        unselectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 158, 158, 158),
+        ),
+        selectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 61, 56, 245),
+        ),
+        onTap: (index) {
+
+          // Navegación basada en el índice seleccionado
+          switch (index) {
+            case 0:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => IngresosPage()),
+              );
+              break;
+            case 1:
+              // Navegar a página de Gastos
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GastosPage()),
+              );
+              break;
+            case 2:
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => HomePage()));
+              break;
+            case 3:
+              // ya estamos en ahorros
+              break;
+            case 4:
+              // Navegar a página de Más opciones
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.arrow_upward),
+            label: 'Ingresos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.arrow_downward),
+            label: 'Gastos',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.savings), label: 'Ahorros'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
+        ],
+      ),
       );
   }
 

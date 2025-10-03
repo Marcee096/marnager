@@ -16,8 +16,18 @@ class _HomePageState extends State<HomePage> {
   late int _mesSeleccionado; // Se inicializa en initState
 
   final List<String> _meses = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   @override
@@ -29,12 +39,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _obtenerMesSeleccionado() {
-    return _meses[_mesSeleccionado - 1] ;
+    return _meses[_mesSeleccionado - 1];
   }
 
   Future<void> _seleccionarMes() async {
     final int mesActual = DateTime.now().month;
-    
+
     // Calcular los 5 meses anteriores hasta el actual
     List<int> mesesDisponibles = [];
     for (int i = 4; i >= 0; i--) {
@@ -64,16 +74,18 @@ class _HomePageState extends State<HomePage> {
                   title: Text(
                     _meses[mes - 1],
                     style: TextStyle(
-                      fontWeight: mes == _mesSeleccionado ? FontWeight.bold : FontWeight.normal,
-                      color: mes == _mesSeleccionado 
-                          ? const Color.fromARGB(255, 61, 56, 245) 
+                      fontWeight: mes == _mesSeleccionado
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: mes == _mesSeleccionado
+                          ? const Color.fromARGB(255, 61, 56, 245)
                           : null,
                     ),
                   ),
                   leading: Icon(
                     Icons.calendar_month,
-                    color: mes == _mesSeleccionado 
-                        ? const Color.fromARGB(255, 61, 56, 245) 
+                    color: mes == _mesSeleccionado
+                        ? const Color.fromARGB(255, 61, 56, 245)
                         : Colors.grey,
                   ),
                   onTap: () {
@@ -107,12 +119,8 @@ class _HomePageState extends State<HomePage> {
     double ingresos = 35000 + (_mesSeleccionado * 100); // Datos de ejemplo
     double gastos = 22000 + (_mesSeleccionado * 50);
     double ahorros = ingresos - gastos;
-    
-    return {
-      'ingresos': ingresos,
-      'gastos': gastos,
-      'ahorros': ahorros,
-    };
+
+    return {'ingresos': ingresos, 'gastos': gastos, 'ahorros': ahorros};
   }
 
   @override
@@ -136,9 +144,8 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ],
-        
       ),
-      
+
       body: ListView(
         padding: const EdgeInsets.all(10.0),
         children: [
@@ -180,29 +187,42 @@ class _HomePageState extends State<HomePage> {
         currentIndex: _indexInicial,
         selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
         unselectedItemColor: const Color.fromARGB(255, 158, 158, 158),
-        unselectedIconTheme: const IconThemeData(color: Color.fromARGB(255, 158, 158, 158)),
-        selectedIconTheme: const IconThemeData(color: Color.fromARGB(255, 61, 56, 245)),
+        unselectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 158, 158, 158),
+        ),
+        selectedIconTheme: const IconThemeData(
+          color: Color.fromARGB(255, 61, 56, 245),
+        ),
         onTap: (index) {
           setState(() {
             _indexInicial = index;
           });
-          
+
           // Navegación basada en el índice seleccionado
           switch (index) {
             case 0:
               // Navegar a página de Ingresos
-              Navigator.push(context, MaterialPageRoute(builder: (context) => IngresosPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => IngresosPage()),
+              );
               break;
             case 1:
               // Navegar a página de Gastos
-              Navigator.push(context, MaterialPageRoute(builder: (context) => GastosPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GastosPage()),
+              );
               break;
             case 2:
               // Ya estamos en Inicio
               break;
             case 3:
               // Navegar a página de Ahorros
-              Navigator.push(context, MaterialPageRoute(builder: (context) => AhorrosPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AhorrosPage()),
+              );
               break;
             case 4:
               // Navegar a página de Más opciones
@@ -218,18 +238,9 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.arrow_downward),
             label: 'Gastos',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Inicio',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.savings),
-            label: 'Ahorros',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'Más',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
+          BottomNavigationBarItem(icon: Icon(Icons.savings), label: 'Ahorros'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
         ],
       ),
     );
@@ -237,174 +248,179 @@ class _HomePageState extends State<HomePage> {
 
   Widget _cardResumen() {
     final datos = _obtenerDatosMes();
-    
+
     return Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-        elevation: 8,
-        shadowColor: Colors.black,
-        child: Padding(
-          padding: const EdgeInsets.all(  15.0),
-          child: Column(
-            children: [
-             
-              const SizedBox(height: 20.0),
-              // Contenedor principal con dos columnas
-              Row(
-                children: [
-                  // Columna de textos (lado izquierdo)
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            const SizedBox(width: 30), // Padding fijo desde la izquierda
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: const BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color.fromRGBO(0, 128, 0, 0.5),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: 8,
+      shadowColor: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20.0),
+            // Contenedor principal con dos columnas
+            Row(
+              children: [
+                // Columna de textos (lado izquierdo)
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            width: 30,
+                          ), // Padding fijo desde la izquierda
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromRGBO(0, 128, 0, 0.5),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Ingresos',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Color.fromARGB(255, 61, 56, 245),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Ingresos',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: Color.fromARGB(255, 61, 56, 245),
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 15.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            const SizedBox(width: 30), // Mismo padding para alineación
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: const BoxDecoration(
-                                color: Colors.orange,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color.fromRGBO(255, 165, 0, 0.5),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            width: 30,
+                          ), // Mismo padding para alineación
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: Colors.orange,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromRGBO(255, 165, 0, 0.5),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Gastos',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Color.fromARGB(255, 61, 56, 245),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Gastos',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: Color.fromARGB(255, 61, 56, 245),
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 15.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            const SizedBox(width: 30), // Mismo padding para alineación
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: const BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color.fromRGBO(0, 0, 255, 0.5),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            width: 30,
+                          ), // Mismo padding para alineación
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 255, 0.5),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Ahorros',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                color: Color.fromARGB(255, 61, 56, 245),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Ahorros',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              color: Color.fromARGB(255, 61, 56, 245),
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  // Columna de valores (lado derecho)
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 30),
-                          child: Text(
-                            '\$${datos['ingresos']!.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.normal,
-                              color: Color.fromARGB(255, 61, 56, 245),
-                            ),
+                ),
+                // Columna de valores (lado derecho)
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 30),
+                        child: Text(
+                          '\$${datos['ingresos']!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                            color: Color.fromARGB(255, 61, 56, 245),
                           ),
                         ),
-                        const SizedBox(height: 15.0),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 30),
-                          child: Text(
-                            '\$${datos['gastos']!.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.normal,
-                              color: Color.fromARGB(255, 61, 56, 245),
-                            ),
+                      ),
+                      const SizedBox(height: 15.0),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 30),
+                        child: Text(
+                          '\$${datos['gastos']!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                            color: Color.fromARGB(255, 61, 56, 245),
                           ),
                         ),
-                        const SizedBox(height: 15.0),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 30),
-                          child: Text(
-                            '\$${datos['ahorros']!.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.normal,
-                              color: Color.fromARGB(255, 61, 56, 245),
-                            ),
+                      ),
+                      const SizedBox(height: 15.0),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 30),
+                        child: Text(
+                          '\$${datos['ahorros']!.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.normal,
+                            color: Color.fromARGB(255, 61, 56, 245),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-      );   
+      ),
+    );
   }
 
-  Widget _cardAtajos(){
+  Widget _cardAtajos() {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -417,7 +433,10 @@ class _HomePageState extends State<HomePage> {
             // Botón Ingresos
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => IngresosPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => IngresosPage()),
+                );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -430,14 +449,14 @@ class _HomePageState extends State<HomePage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.arrow_upward, 
+                      Icons.arrow_upward,
                       color: Color.fromARGB(255, 61, 56, 245),
                       size: 24,
                     ),
                   ),
                   const SizedBox(height: 8.0),
                   const Text(
-                    'Ingresos', 
+                    'Ingresos',
                     style: TextStyle(
                       color: Color.fromARGB(255, 61, 56, 245),
                       fontSize: 12,
@@ -450,7 +469,10 @@ class _HomePageState extends State<HomePage> {
             // Botón Gastos
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => GastosPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => GastosPage()),
+                );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -463,14 +485,14 @@ class _HomePageState extends State<HomePage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.arrow_downward, 
+                      Icons.arrow_downward,
                       color: Color.fromARGB(255, 61, 56, 245),
                       size: 24,
                     ),
                   ),
                   const SizedBox(height: 8.0),
                   const Text(
-                    'Gastos', 
+                    'Gastos',
                     style: TextStyle(
                       color: Color.fromARGB(255, 61, 56, 245),
                       fontSize: 12,
@@ -483,7 +505,10 @@ class _HomePageState extends State<HomePage> {
             // Botón Ahorros
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AhorrosPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AhorrosPage()),
+                );
               },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -496,14 +521,14 @@ class _HomePageState extends State<HomePage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.savings, 
+                      Icons.savings,
                       color: Color.fromARGB(255, 61, 56, 245),
                       size: 24,
                     ),
                   ),
                   const SizedBox(height: 8.0),
                   const Text(
-                    'Ahorros', 
+                    'Ahorros',
                     style: TextStyle(
                       color: Color.fromARGB(255, 61, 56, 245),
                       fontSize: 12,
@@ -515,10 +540,7 @@ class _HomePageState extends State<HomePage> {
             ),
             // Botón Registros
             GestureDetector(
-              onTap: () {
-                
-               
-              },
+              onTap: () {},
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -530,14 +552,14 @@ class _HomePageState extends State<HomePage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.list, 
+                      Icons.list,
                       color: Color.fromARGB(255, 61, 56, 245),
                       size: 24,
                     ),
                   ),
                   const SizedBox(height: 8.0),
                   const Text(
-                    'Registros', 
+                    'Registros',
                     style: TextStyle(
                       color: Color.fromARGB(255, 61, 56, 245),
                       fontSize: 12,
@@ -552,8 +574,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  
-  Widget _cardFuentesIngresos(){
+
+  Widget _cardFuentesIngresos() {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -583,4 +605,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
