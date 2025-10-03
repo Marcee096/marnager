@@ -1,39 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:marnager/pages/gastos_page.dart';
-import 'package:marnager/pages/home_page.dart';
-import 'package:marnager/pages/ingresos_page.dart';
+import 'package:marnager/src/pages/ahorros_page.dart';
+import 'package:marnager/src/pages/home_page.dart';
+import 'package:marnager/src/pages/ingresos_page.dart';
 
-class AhorrosPage extends StatefulWidget {
-  const AhorrosPage({super.key});
+class GastosPage extends StatefulWidget {
+  const GastosPage({super.key});
 
   @override
-  State<AhorrosPage> createState() => _AhorrosPageState();
+  State<GastosPage> createState() => _GastosPageState();
 }
 
-class _AhorrosPageState extends State<AhorrosPage> {
+    String? _opcionSeleccionadaDropdown;
+    String? gastoSeleccionado;
 
-  String? _opcionSeleccionadaDropdown;
-  String? ahorroSeleccionado;
+    final List<String> _gastos = [
+      //ejemplos, esta lista debe obtenerse de una BD
+      'Comida',
+      'Transporte',
+      'Entretenimiento',
+    ];
 
-  final List<String> _ahorros = [
-    //ejemplos, esta lista debe obtenerse de una BD
-    'Vacaciones',
-    'Cumpleaños',
-    'Fondo de Emergencia',
-  ];
-
+class _GastosPageState extends State<GastosPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Ahorros', style: TextStyle(color: Colors.white)),
+        title: const Text('Gastos',style: TextStyle(color: Colors.white),),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
-      body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoria()]),
-      bottomNavigationBar: BottomNavigationBar(
+       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto()]),
+       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: 3,
+        currentIndex: 1,
         selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
         unselectedItemColor: const Color.fromARGB(255, 158, 158, 158),
         unselectedIconTheme: const IconThemeData(
@@ -53,18 +52,18 @@ class _AhorrosPageState extends State<AhorrosPage> {
               );
               break;
             case 1:
-              // Navegar a página de Gastos
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => GastosPage()),
-              );
+              //ya estamos en gastos
               break;
             case 2:
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => HomePage()));
               break;
             case 3:
-              // ya estamos en ahorros
+              // Navegar a página de Ahorros
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AhorrosPage()),
+              );
               break;
             case 4:
               // Navegar a página de Más opciones
@@ -85,10 +84,10 @@ class _AhorrosPageState extends State<AhorrosPage> {
           BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
         ],
       ),
-      );
+    );
   }
 
-  Widget _cardCategoria() {
+  Widget _cardCategoriaGasto(){
     return Card(
       elevation: 8.0,
       child: Padding(
@@ -96,7 +95,7 @@ class _AhorrosPageState extends State<AhorrosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Categoria de ahorro'),
+            const Text('Categoria de gasto'),
             const SizedBox(height: 15.0),
             _crearDropdown(),
           ],
@@ -107,12 +106,12 @@ class _AhorrosPageState extends State<AhorrosPage> {
 
   List<DropdownMenuItem<String>> getOpcionesDropdown() {
     List<DropdownMenuItem<String>> lista = [];
-    for (var ahorro in _ahorros) {
+    for (var gasto in _gastos) {
       lista.add(
         DropdownMenuItem(
-          value: ahorro,
+          value: gasto,
           child: Text(
-            ahorro,
+            gasto,
             style: const TextStyle(color: Colors.white), // Texto blanco en cada opción
           ),
         ),
@@ -120,6 +119,7 @@ class _AhorrosPageState extends State<AhorrosPage> {
     }
     return lista;
   }
+
 
   Widget _crearDropdown() {
     return Row(
@@ -157,4 +157,5 @@ class _AhorrosPageState extends State<AhorrosPage> {
       ],
     );
   }
+
 }

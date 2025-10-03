@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/src/pages/ahorros_page.dart';
+import 'package:marnager/src/pages/gastos_page.dart';
+import 'package:marnager/src/pages/ingresos_page.dart';
 
-import 'ahorros_page.dart';
-import 'gastos_page.dart';
-import 'ingresos_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

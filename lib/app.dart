@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:marnager/pages/login_page.dart';
+import 'package:marnager/src/pages/login_page.dart';
 
 
 class MyApp extends StatelessWidget {

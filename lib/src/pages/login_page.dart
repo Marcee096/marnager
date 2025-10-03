@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/src/pages/registro_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -79,7 +80,10 @@ class LoginPage extends StatelessWidget {
           GestureDetector(
             onTap: () {
               // Acción para registrarse
-              // Navigator.pushNamed(context, '/register');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => RegistroPage()),
+              );
             },
             child: Text(
               "Registrarme",

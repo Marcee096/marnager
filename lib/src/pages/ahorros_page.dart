@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:marnager/pages/ahorros_page.dart' show AhorrosPage;
-import 'package:marnager/pages/gastos_page.dart';
-import 'package:marnager/pages/home_page.dart';
+import 'package:marnager/src/pages/gastos_page.dart';
+import 'package:marnager/src/pages/home_page.dart';
+import 'package:marnager/src/pages/ingresos_page.dart';
 
-class IngresosPage extends StatefulWidget {
-  const IngresosPage({super.key});
+class AhorrosPage extends StatefulWidget {
+  const AhorrosPage({super.key});
 
   @override
-  State<IngresosPage> createState() => _IngresosPageState();
+  State<AhorrosPage> createState() => _AhorrosPageState();
 }
 
-class _IngresosPageState extends State<IngresosPage> {
-  String? _opcionSeleccionadaDropdown;
-  String? ingresoSeleccionado;
-  
+class _AhorrosPageState extends State<AhorrosPage> {
 
-  final List<String> _ingresos = [
+  String? _opcionSeleccionadaDropdown;
+  String? ahorroSeleccionado;
+
+  final List<String> _ahorros = [
     //ejemplos, esta lista debe obtenerse de una BD
-    'Invitaciones',
-    'Joyas',
-    'Beca',
+    'Vacaciones',
+    'Cumpleaños',
+    'Fondo de Emergencia',
   ];
 
   @override
@@ -27,13 +27,13 @@ class _IngresosPageState extends State<IngresosPage> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Ingresos', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color.fromARGB(255, 61, 56, 245),
+        title: const Text('Ahorros', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
-      body: ListView(padding: const EdgeInsets.all(10.0), children: [_cardFuente()]),
+      body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoria()]),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: 0,
+        currentIndex: 3,
         selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
         unselectedItemColor: const Color.fromARGB(255, 158, 158, 158),
         unselectedIconTheme: const IconThemeData(
@@ -47,7 +47,10 @@ class _IngresosPageState extends State<IngresosPage> {
           // Navegación basada en el índice seleccionado
           switch (index) {
             case 0:
-              //ya estamos en ingresos
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => IngresosPage()),
+              );
               break;
             case 1:
               // Navegar a página de Gastos
@@ -61,11 +64,7 @@ class _IngresosPageState extends State<IngresosPage> {
                   MaterialPageRoute(builder: (context) => HomePage()));
               break;
             case 3:
-              // Navegar a página de Ahorros
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AhorrosPage()),
-              );
+              // ya estamos en ahorros
               break;
             case 4:
               // Navegar a página de Más opciones
@@ -86,10 +85,10 @@ class _IngresosPageState extends State<IngresosPage> {
           BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'Más'),
         ],
       ),
-    );
+      );
   }
 
-  Widget _cardFuente() {
+  Widget _cardCategoria() {
     return Card(
       elevation: 8.0,
       child: Padding(
@@ -97,7 +96,7 @@ class _IngresosPageState extends State<IngresosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Fuente de Ingreso'),
+            const Text('Categoria de ahorro'),
             const SizedBox(height: 15.0),
             _crearDropdown(),
           ],
@@ -108,15 +107,13 @@ class _IngresosPageState extends State<IngresosPage> {
 
   List<DropdownMenuItem<String>> getOpcionesDropdown() {
     List<DropdownMenuItem<String>> lista = [];
-    for (var ingreso in _ingresos) {
+    for (var ahorro in _ahorros) {
       lista.add(
         DropdownMenuItem(
-          value: ingreso,
+          value: ahorro,
           child: Text(
-            ingreso,
-            style: const TextStyle(
-              color: Colors.white,
-            ), // Texto blanco en los items
+            ahorro,
+            style: const TextStyle(color: Colors.white), // Texto blanco en cada opción
           ),
         ),
       );
@@ -147,11 +144,11 @@ class _IngresosPageState extends State<IngresosPage> {
               style: const TextStyle(
                 color: Colors.white,
               ), // Color del texto seleccionado
-              dropdownColor: const Color.fromARGB( 255,61,56,245,), // Color de fondo del menú desplegable
+              dropdownColor: const Color.fromARGB(255,61,56,245,), // Color de fondo del menú desplegable
               items: getOpcionesDropdown(),
               onChanged: (opt) {
                 setState(() {
-                  _opcionSeleccionadaDropdown = opt.toString();
+                  _opcionSeleccionadaDropdown = opt; // No uses .toString(), usa el valor directamente
                 });
               },
             ),
