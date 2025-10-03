@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/pages/login_page.dart';
 
-import 'pages/home_page.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 29, 5, 163)),
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: const LoginPage(),
     );
   }
 }
