@@ -13,6 +13,8 @@ class IngresosPage extends StatefulWidget {
 class _IngresosPageState extends State<IngresosPage> {
   String? _opcionSeleccionadaDropdown;
   String? ingresoSeleccionado;
+  String? cuentaSeleccionada;
+
   
 
   final List<String> _ingresos = [
@@ -20,6 +22,14 @@ class _IngresosPageState extends State<IngresosPage> {
     'Invitaciones',
     'Joyas',
     'Beca',
+  ];
+
+  final List<String> _cuentas = [
+    //ejemplos, esta lista debe obtenerse de una BD
+    'Venta',
+    'Seña',
+    'Cobro',
+    'Intereses',
   ];
 
   @override
@@ -30,7 +40,10 @@ class _IngresosPageState extends State<IngresosPage> {
         title: const Text('Ingresos', style: TextStyle(color: Colors.white)),
         backgroundColor: Color.fromARGB(255, 61, 56, 245),
       ),
-      body: ListView(padding: const EdgeInsets.all(10.0), children: [_cardFuente()]),
+      body: ListView(
+        padding: const EdgeInsets.all(10.0),
+        children: [_cardFuente(), _cardCargaIngreso()],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 0,
@@ -124,6 +137,64 @@ class _IngresosPageState extends State<IngresosPage> {
     return lista;
   }
 
+  List<DropdownMenuItem<String>> getOpcionesCuentasDropdown() {
+    List<DropdownMenuItem<String>> lista = [];
+    for (var cuenta in _cuentas) {
+      lista.add(
+        DropdownMenuItem(
+          value: cuenta,
+          child: Text(
+            cuenta,
+            style: const TextStyle(
+              color: Colors.white,
+            ), // Texto blanco en los items
+          ),
+        ),
+      );
+    }
+    return lista;
+  }
+
+  Widget _crearDropdownCuentas() {
+    return Row(
+      children: <Widget>[
+        const SizedBox(width: 10.0),
+        Container(
+          width: 250.0,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 233, 233, 236), // Color de fondo
+            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
+            border: Border.all(
+              color: Color.fromARGB(255, 61, 56, 245), // Color del borde
+              width: 2.0, // Ancho del borde
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton(
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+              value: ingresoSeleccionado,
+              hint: const Text(
+                'Cuenta',
+                style: TextStyle(color: Colors.black),
+              ),
+              isExpanded: true,
+              style: const TextStyle(
+                color: Colors.black,
+              ), // Color del texto seleccionado
+              
+              items: getOpcionesCuentasDropdown(),
+              onChanged: (opt) {
+                setState(() {
+                  ingresoSeleccionado = opt.toString();
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
   Widget _crearDropdown() {
     return Row(
       children: <Widget>[
@@ -158,6 +229,72 @@ class _IngresosPageState extends State<IngresosPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _cardCargaIngreso() {
+    return Card(
+      elevation: 8.0,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            
+            const Text('Carga de datos'),
+            const SizedBox(height: 15.0),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Adjuntar comprobante',
+                hintStyle: const TextStyle(color: Colors.black),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.attach_file, color: Colors.black),
+                  onPressed: () {
+                    // Acción para adjuntar archivo
+                  },
+                 
+                ),
+                
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+            const SizedBox(height: 15.0),
+            const Text('Carga manual'),
+            const SizedBox(height: 15.0),
+            _crearDropdownCuentas(),
+            const SizedBox(height: 15.0),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Monto',
+                hintStyle: const TextStyle(color: Colors.black),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+            const SizedBox(height: 15.0),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Detalle (opcional)',
+                hintStyle: const TextStyle(color: Colors.black),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

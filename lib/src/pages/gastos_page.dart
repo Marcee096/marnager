@@ -12,12 +12,20 @@ class GastosPage extends StatefulWidget {
 
     String? _opcionSeleccionadaDropdown;
     String? gastoSeleccionado;
+    String? cuentaSeleccionada;
 
     final List<String> _gastos = [
       //ejemplos, esta lista debe obtenerse de una BD
       'Comida',
       'Transporte',
       'Entretenimiento',
+    ];
+
+    final List<String> _cuentas = [
+      //ejemplos, esta lista debe obtenerse de una BD
+      'Efectivo',
+      'Tarjeta de crédito',
+      'Cuenta bancaria',
     ];
 
 class _GastosPageState extends State<GastosPage> {
@@ -29,7 +37,7 @@ class _GastosPageState extends State<GastosPage> {
         title: const Text('Gastos',style: TextStyle(color: Colors.white),),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
-       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto()]),
+       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto(), _cardCargaGasto()]),
        bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 1,
@@ -158,4 +166,121 @@ class _GastosPageState extends State<GastosPage> {
     );
   }
 
-}
+  List<DropdownMenuItem<String>> getOpcionesCuentasDropdown() {
+    List<DropdownMenuItem<String>> lista = [];
+    for (var cuenta in _cuentas) {
+      lista.add(
+        DropdownMenuItem(
+          value: cuenta,
+          child: Text(
+            cuenta,
+            style: const TextStyle(color: Colors.white), // Texto blanco en cada opción
+          ),
+        ),
+      );
+    }
+    return lista;
+  }
+
+  Widget _crearDropdownCuentas() {
+    return Row(
+      children: <Widget>[
+        const SizedBox(width: 10.0),
+        Container(
+          width: 250.0,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 232, 232, 236), // Color de fondo
+            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton(
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
+              value: cuentaSeleccionada,
+              hint: const Text(
+                'Cuenta',
+                style: TextStyle(color: Colors.black),
+              ),
+              isExpanded: true,
+              style: const TextStyle(
+                color: Colors.black,
+              ), // Color del texto seleccionado
+              dropdownColor: const Color.fromARGB(255, 61, 56, 245), // Color de fondo del menú desplegable
+              items: getOpcionesCuentasDropdown(),
+              onChanged: (opt) {
+                setState(() {
+                  cuentaSeleccionada = opt;
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _cardCargaGasto(){
+    return Card(
+      elevation: 8.0,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            
+            const Text('Carga de datos'),
+            const SizedBox(height: 15.0),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Adjuntar comprobante',
+                hintStyle: const TextStyle(color: Colors.black),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.attach_file, color: Colors.black),
+                  onPressed: () {
+                    // Acción para adjuntar archivo
+                  },
+                 
+                ),
+                
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+            const SizedBox(height: 15.0),
+            const Text('Carga manual'),
+            const SizedBox(height: 15.0),
+            _crearDropdownCuentas(),
+            const SizedBox(height: 15.0),
+            TextField(
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Monto',
+                hintStyle: const TextStyle(color: Colors.black),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+            const SizedBox(height: 15.0),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                filled: true,
+                hintText: 'Detalle (opcional)',
+                hintStyle: const TextStyle(color: Colors.black),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+          ],
+        ),
+      ),
+    );
+}}

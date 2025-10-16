@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marnager/src/pages/home_page.dart';
 import 'package:marnager/src/pages/registro_page.dart';
 
 class LoginPage extends StatelessWidget {
@@ -71,7 +72,10 @@ class LoginPage extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
             onPressed: () {
-              // Acción al presionar el botón
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
             },
             child: const Text('Iniciar sesión'),
           ),
