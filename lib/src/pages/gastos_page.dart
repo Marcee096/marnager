@@ -25,9 +25,11 @@ class GastosPage extends StatefulWidget {
     final List<String> _cuentas = [
       //ejemplos, esta lista debe obtenerse de una BD
       'Efectivo',
-      'Tarjeta de crédito',
-      'Cuenta bancaria',
+      'Tarjeta de Credito',
+      'Cuenta Ahorro',
     ];
+
+   
 
 class _GastosPageState extends State<GastosPage> {
   @override
@@ -176,7 +178,7 @@ class _GastosPageState extends State<GastosPage> {
           value: cuenta,
           child: Text(
             cuenta,
-            style: const TextStyle(color: Colors.white), // Texto blanco en cada opción
+            style: const TextStyle(color: Colors.black), // Texto blanco en cada opción
           ),
         ),
       );
@@ -234,13 +236,13 @@ class _GastosPageState extends State<GastosPage> {
             children: <Widget>[
               const Text('Carga de datos'),
               Row(
-                mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 61, 56, 245),
                       foregroundColor: Colors.white,
                       shape: const CircleBorder(),
+                      
                       padding: const EdgeInsets.all(8), // Reducido de 12 a 8
                       elevation: 5,
                       shadowColor: Colors.grey,
@@ -272,31 +274,45 @@ class _GastosPageState extends State<GastosPage> {
           const SizedBox(height: 15.0),
           _crearDropdownCuentas(),
           const SizedBox(height: 15.0),
-          TextField(
+          Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
               ),
               filled: true,
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Monto',
               hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
           ),
-          const SizedBox(height: 15.0),
-          TextField(
+        ),
+        const SizedBox(height: 15.0),
+        // TextField con el mismo estilo que el dropdown
+        Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
               ),
               filled: true,
+              
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Detalle (opcional)',
               hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
           ),
-        ],
-      ),
-    ));
+        ),
+      ],
+    ),
+  ));
 }}
