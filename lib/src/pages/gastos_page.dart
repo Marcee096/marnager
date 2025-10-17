@@ -229,50 +229,74 @@ class _GastosPageState extends State<GastosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                const Text('Carga automática'),
-                SizedBox(width: 10.0),
-                ElevatedButton(onPressed: () {}, child: Icon(Icons.camera_alt)),
-                const SizedBox(width: 10.0),
-                ElevatedButton(onPressed: () {}, child: Icon(Icons.attach_file)),
-
-              ],
-            ),
-            const SizedBox(height: 15.0),
-            
-             
-            const SizedBox(height: 15.0),
-            const Text('Carga manual'),
-            const SizedBox(height: 15.0),
-            _crearDropdownCuentas(),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Monto',
-                hintStyle: const TextStyle(color: Colors.black),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text('Carga de datos'),
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.camera_alt, size: 18), // Icono más pequeño
+                  ),
+                  const SizedBox(width: 4.0), // Reducido de 8.0 a 4.0
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.attach_file, size: 18), // Icono más pequeño
+                  ),
+                ],
               ),
-              style: const TextStyle(color: Colors.black),
-            ),
-            const SizedBox(height: 15.0),
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Detalle (opcional)',
-                hintStyle: const TextStyle(color: Colors.black),
+            ],
+          ),
+          const SizedBox(height: 15.0),
+          _crearDropdownCuentas(),
+          const SizedBox(height: 15.0),
+          TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
               ),
-              style: const TextStyle(color: Colors.black),
+              filled: true,
+              hintText: 'Monto',
+              hintStyle: const TextStyle(color: Colors.black),
             ),
-          ],
-        ),
+            style: const TextStyle(color: Colors.black),
+          ),
+          const SizedBox(height: 15.0),
+          TextField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              filled: true,
+              hintText: 'Detalle (opcional)',
+              hintStyle: const TextStyle(color: Colors.black),
+            ),
+            style: const TextStyle(color: Colors.black),
+          ),
+        ],
       ),
-    );
+    ));
 }}
