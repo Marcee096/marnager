@@ -6,11 +6,12 @@ import 'package:marnager/src/pages/ingresos_page.dart';
 class GastosPage extends StatefulWidget {
   const GastosPage({super.key});
 
+  
   @override
   State<GastosPage> createState() => _GastosPageState();
 }
 
-    String? _opcionSeleccionadaDropdown;
+  String? _opcionSeleccionadaDropdown;
     String? gastoSeleccionado;
     String? cuentaSeleccionada;
 
@@ -134,8 +135,9 @@ class _GastosPageState extends State<GastosPage> {
       children: <Widget>[
         const SizedBox(width: 10.0),
         Container(
-          width: 250.0,
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
+          width: 200.0,
+          height: 40.0,
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
           decoration: BoxDecoration(
             color: Color.fromARGB(255, 61, 56, 245), // Color de fondo
             borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
@@ -227,29 +229,19 @@ class _GastosPageState extends State<GastosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            
-            const Text('Carga de datos'),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Adjuntar comprobante',
-                hintStyle: const TextStyle(color: Colors.black),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.attach_file, color: Colors.black),
-                  onPressed: () {
-                    // Acción para adjuntar archivo
-                  },
-                 
-                ),
-                
-              ),
-              style: const TextStyle(color: Colors.black),
+            Row(
+              children: <Widget>[
+                const Text('Carga automática'),
+                SizedBox(width: 10.0),
+                ElevatedButton(onPressed: () {}, child: Icon(Icons.camera_alt)),
+                const SizedBox(width: 10.0),
+                ElevatedButton(onPressed: () {}, child: Icon(Icons.attach_file)),
+
+              ],
             ),
+            const SizedBox(height: 15.0),
+            
+             
             const SizedBox(height: 15.0),
             const Text('Carga manual'),
             const SizedBox(height: 15.0),
