@@ -16,6 +16,9 @@ class _HomePageState extends State<HomePage> {
   int _indexInicial = 2; // Inicio como selección inicial
   late int _mesSeleccionado; // Se inicializa en initState
   
+  // Variables para el carrusel de gráficos
+  int _graficoActual = 0; // 0: Ingresos, 1: Gastos, 2: Ahorros
+  final List<String> _tiposGrafico = ['Ingresos', 'Gastos', 'Ahorros'];
 
   final List<String> _meses = [
     'Enero',
@@ -31,6 +34,48 @@ class _HomePageState extends State<HomePage> {
     'Noviembre',
     'Diciembre',
   ];
+
+  // Datos de ejemplo para las categorías (estos deberían venir de la BD)
+  final Map<String, double> _datosIngresos = {
+    'Invitaciones': 21000,
+    'Joyas': 3000,
+    'Beca': 2000,
+  };
+
+  final Map<String, double> _datosGastos = {
+    'Personales': 21000,
+    'Joyas': 3000,
+    'Invitaciones': 2000,
+  };
+
+  final Map<String, double> _datosAhorros = {
+    'Vacaciones': 21000,
+    'Cumpleaños': 3000,
+    'Fondo de Emergencia': 2000,
+  };
+
+  // Método para obtener el icono según la categoría
+  IconData _obtenerIcono(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'invitaciones':
+        return Icons.card_giftcard;
+      case 'joyas':
+        return Icons.diamond;
+      case 'beca':
+      case 'educación':
+        return Icons.school;
+      case 'personales':
+        return Icons.person;
+      case 'vacaciones':
+        return Icons.beach_access;
+      case 'cumpleaños':
+        return Icons.cake;
+      case 'fondo de emergencia':
+        return Icons.security;
+      default:
+        return Icons.attach_money;
+    }
+  }
 
   @override
   void initState() {
@@ -423,65 +468,125 @@ class _HomePageState extends State<HomePage> {
     );
   }
   
-  // Nuevo método: grafico de pastel para el resumen
-  Widget _pieChartResumen(Map<String, double> datos) {
-    final double ingresos = datos['ingresos'] ?? 0;
-    final double gastos = datos['gastos'] ?? 0;
-    final double ahorros = datos['ahorros'] ?? 0;
+  // Método para obtener datos según el gráfico seleccionado
+  Map<String, double> _obtenerDatosGraficoActual() {
+    switch (_graficoActual) {
+      case 0:
+        return _datosIngresos;
+      case 1:
+        return _datosGastos;
+      case 2:
+        return _datosAhorros;
+      default:
+        return _datosIngresos;
+    }
+  }
 
-    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
-    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
+  // Nuevo método: grafico de pastel para categorías (estilo actualizado)
+  Widget _pieChartCategorias(Map<String, double> datos) {
+    // Si no hay datos, mostrar placeholder  
+    if (datos.isEmpty) {
       return const SizedBox(
-        height: 160,
+        height: 200,
         child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
       );
     }
 
+    // Colores que coinciden con las otras páginas
+    final List<Color> colores = [
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
+    ];
+
+    // Calcular el total para los porcentajes
+    final double total = datos.values.reduce((a, b) => a + b);
+
     return SizedBox(
-      height: 160,
+      height: 200,
       child: PieChart(
         PieChartData(
           sectionsSpace: 2,
-          centerSpaceRadius: 30,
-          sections: [
-            PieChartSectionData(
-              value: ingresos,
-              color: Colors.green,
-              title: '\$${ingresos.toStringAsFixed(0)}',
+          centerSpaceRadius: 70,
+          sections: datos.entries.map((entry) {
+            int index = datos.keys.toList().indexOf(entry.key);
+            double porcentaje = (entry.value / total) * 100;
+            return PieChartSectionData(
+              value: entry.value,
+              color: colores[index % colores.length],
+              title: '${porcentaje.toStringAsFixed(1)}%',
               radius: 40,
               showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              titleStyle: const TextStyle(
+                color: Colors.white, 
+                fontSize: 14, 
+                fontWeight: FontWeight.bold
+              ),
               borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: gastos,
-              color: Colors.orange,
-              title: '\$${gastos.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: ahorros,
-              color: Colors.blue,
-              title: '\$${ahorros.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-          ],
+              titlePositionPercentageOffset: 0.5,
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  // Nueva card que contiene el gráfico
+  // Leyenda para las categorías
+  Widget _leyendaCategorias(Map<String, double> datos) {
+    if (datos.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Colores que coinciden con el gráfico
+    final List<Color> colores = [
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
+    ];
+
+    return Column(
+      children: datos.entries.map((entry) {
+        int index = datos.keys.toList().indexOf(entry.key);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          child: Row(
+            children: [
+              Icon(
+                _obtenerIcono(entry.key),
+                color: colores[index % colores.length],
+                size: 24,
+              ),
+              const SizedBox(width: 10),
+              // Nombre de la categoría y monto
+              Expanded(
+                child: Text(
+                  '${entry.key}: \$${entry.value.toStringAsFixed(0)}',
+
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 21, 21, 21),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // Nueva card que contiene el gráfico con carrusel
   Widget _cardGrafico(Map<String, double> datos) {
+    final datosGrafico = _obtenerDatosGraficoActual();
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -491,18 +596,65 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Distribución',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 61, 56, 245),
+             // Título dinámico
+            Text(
+              '${_tiposGrafico[_graficoActual]} por Categoría',
+              style: const TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w600,
+                color: Color.fromARGB(255, 25, 25, 26),
               ),
             ),
             const SizedBox(height: 10),
-            // reutiliza tu método de pie chart
-            _pieChartResumen(datos),
+            // Botones del carrusel
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildBotonCarrusel('Ingresos', 0),
+                  _buildBotonCarrusel('Gastos', 1),
+                  _buildBotonCarrusel('Ahorros', 2),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15),
+            // Gráfico de categorías
+            _pieChartCategorias(datosGrafico),
+            const SizedBox(height: 10),
+            // Leyenda
+            _leyendaCategorias(datosGrafico),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Método para construir botones del carrusel
+  Widget _buildBotonCarrusel(String titulo, int indice) {
+    final bool isSelected = _graficoActual == indice;
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _graficoActual = indice;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? const Color.fromARGB(255, 61, 56, 245)
+              : Colors.grey[200],
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          titulo,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 12,
+          ),
         ),
       ),
     );
