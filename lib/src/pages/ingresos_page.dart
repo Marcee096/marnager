@@ -32,13 +32,49 @@ class _IngresosPageState extends State<IngresosPage> {
     'Cobro',
     'Intereses',
   ];
-  final Map<String, double> datos = {
-    'Invitaciones': 5000,
-    'Joyas': 3000,
-    'Beca': 2000,
-  };
+  
+  // Datos estructurados con categorías y subcategorías
+  final List<Map<String, dynamic>> datosCompletos = [
+    { 'categoria': 'Invitaciones', 'subcategoria': 'Web', 'monto': 5000 },
+    { 'categoria': 'Invitaciones', 'subcategoria': 'Imagen', 'monto': 3000 },
+    { 'categoria': 'Invitaciones', 'subcategoria': 'Video', 'monto': 8000 },
+    { 'categoria': 'Invitaciones', 'subcategoria': 'PDF', 'monto': 5000 },
+    { 'categoria': 'Joyas', 'subcategoria': 'Tienda', 'monto': 3000 },
+    { 'categoria': 'Beca', 'subcategoria': 'Educación', 'monto': 2000 },
+  ];
+
+  // Método para obtener subcategorías según la selección del dropdown
+  Map<String, double> _obtenerDatosParaGrafico() {
+    if (_opcionSeleccionadaDropdown == null) {
+      // Si no hay selección, mostrar todas las categorías principales
+      Map<String, double> categoriasPrincipales = {};
+      for (var categoria in _ingresos) {
+        double total = datosCompletos
+            .where((item) => item['categoria'] == categoria)
+            .fold(0.0, (sum, item) => sum + item['monto']);
+        if (total > 0) {
+          categoriasPrincipales[categoria] = total;
+        }
+      }
+      return categoriasPrincipales;
+    } else {
+      // Si hay una categoría seleccionada, mostrar sus subcategorías
+      Map<String, double> subcategorias = {};
+      var datosCategoria = datosCompletos
+          .where((item) => item['categoria'] == _opcionSeleccionadaDropdown)
+          .toList();
+      
+      for (var item in datosCategoria) {
+        subcategorias[item['subcategoria']] = item['monto'].toDouble();
+      }
+      return subcategorias;
+    }
+  }
   @override
   Widget build(BuildContext context) {
+    // Obtener datos dinámicos según la selección
+    final datosDinamicos = _obtenerDatosParaGrafico();
+    
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
@@ -47,7 +83,7 @@ class _IngresosPageState extends State<IngresosPage> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(10.0),
-        children: [_cardFuente(), _cardCargaIngreso(), _cardGrafico(datos), _pieChartResumen(datos)],
+        children: [_cardFuente(), _cardCargaIngreso(), _cardGrafico(datosDinamicos)],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -335,62 +371,7 @@ class _IngresosPageState extends State<IngresosPage> {
   ));
 }
 
-   // Nuevo método: grafico de pastel para el resumen
-  Widget _pieChartResumen(Map<String, double> datos) {
-    final double ingresos = datos['ingresos'] ?? 0;
-    final double gastos = datos['gastos'] ?? 0;
-    final double ahorros = datos['ahorros'] ?? 0;
 
-    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
-    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
-      );
-    }
-
-    return SizedBox(
-      height: 160,
-      child: PieChart(
-        PieChartData(
-          sectionsSpace: 2,
-          centerSpaceRadius: 30,
-          sections: [
-            PieChartSectionData(
-              value: ingresos,
-              color: Colors.green,
-              title: '\$${ingresos.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: gastos,
-              color: Colors.orange,
-              title: '\$${gastos.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: ahorros,
-              color: Colors.blue,
-              title: '\$${ahorros.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // Método específico para gráfico de categorías de ingresos
   Widget _pieChartIngresos(Map<String, double> datos) {
@@ -442,6 +423,11 @@ class _IngresosPageState extends State<IngresosPage> {
 
   // Actualiza la card del gráfico para usar el nuevo método
   Widget _cardGrafico(Map<String, double> datos) {
+    // Título dinámico según la selección
+    String titulo = _opcionSeleccionadaDropdown == null 
+        ? 'Resumen por Categorías' 
+        : 'Subcategorías de $_opcionSeleccionadaDropdown';
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -451,9 +437,9 @@ class _IngresosPageState extends State<IngresosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Resumen',
-              style: TextStyle(
+            Text(
+              titulo,
+              style: const TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
                 color: Color.fromARGB(255, 61, 56, 245),
