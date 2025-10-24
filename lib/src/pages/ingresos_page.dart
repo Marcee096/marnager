@@ -32,6 +32,36 @@ class _IngresosPageState extends State<IngresosPage> {
     'Cobro',
     'Intereses',
   ];
+
+  // Método para obtener el icono según la categoría/subcategoría
+  IconData _obtenerIcono(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'web':
+      case 'páginas web':
+        return Icons.web;
+      case 'imagen':
+      case 'diseño gráfico':
+        return Icons.image;
+      case 'video':
+      case 'edición de video':
+        return Icons.video_library;
+      case 'pdf':
+      case 'documentos':
+        return Icons.picture_as_pdf;
+      case 'tienda':
+      case 'retail':
+        return Icons.store;
+      case 'educación':
+      case 'beca':
+        return Icons.school;
+      case 'invitaciones':
+        return Icons.card_giftcard;
+      case 'joyas':
+        return Icons.diamond;
+      default:
+        return Icons.attach_money;
+    }
+  }
   
   // Datos estructurados con categorías y subcategorías
   final List<Map<String, dynamic>> datosCompletos = [
@@ -339,7 +369,7 @@ class _IngresosPageState extends State<IngresosPage> {
               filled: true,
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Monto',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
@@ -360,7 +390,7 @@ class _IngresosPageState extends State<IngresosPage> {
               
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Detalle (opcional)',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
@@ -385,35 +415,39 @@ class _IngresosPageState extends State<IngresosPage> {
 
     // Colores para las diferentes categorías
     final List<Color> colores = [
-      Colors.green,
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
     ];
 
+    // Calcular el total para los porcentajes
+    final double total = datos.values.reduce((a, b) => a + b);
+
     return SizedBox(
-      height: 160,
+      height: 200,
       child: PieChart(
         PieChartData(
           sectionsSpace: 2,
-          centerSpaceRadius: 30,
+          centerSpaceRadius: 50,
           sections: datos.entries.map((entry) {
             int index = datos.keys.toList().indexOf(entry.key);
+            double porcentaje = (entry.value / total) * 100;
             return PieChartSectionData(
               value: entry.value,
               color: colores[index % colores.length],
-              title: '\$${entry.value.toStringAsFixed(0)}',
-              radius: 40,
+              title: '${porcentaje.toStringAsFixed(1)}%',
+              radius: 60,
               showTitle: true,
               titleStyle: const TextStyle(
                 color: Colors.white, 
-                fontSize: 12, 
+                fontSize: 14, 
                 fontWeight: FontWeight.bold
               ),
               borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
+              titlePositionPercentageOffset: 0.7,
             );
           }).toList(),
         ),
@@ -440,9 +474,9 @@ class _IngresosPageState extends State<IngresosPage> {
             Text(
               titulo,
               style: const TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 61, 56, 245),
+                fontSize: 14.0,
+                fontWeight: FontWeight.normal,
+                color: Color.fromARGB(255, 25, 25, 26),
               ),
             ),
             const SizedBox(height: 10),
@@ -459,36 +493,42 @@ class _IngresosPageState extends State<IngresosPage> {
 
   // leyenda para identificar las categorías
   Widget _leyendaIngresos(Map<String, double> datos) {
+    // Colores que coinciden con el gráfico
     final List<Color> colores = [
-      Colors.green,
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
     ];
 
     return Column(
       children: datos.entries.map((entry) {
         int index = datos.keys.toList().indexOf(entry.key);
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: Row(
             children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: colores[index % colores.length],
-                  shape: BoxShape.circle,
-                ),
+             
+              const SizedBox(width: 10),
+              // Icono específico para cada categoría
+              Icon(
+                _obtenerIcono(entry.key),
+                color: colores[index % colores.length],
+                size: 24,
               ),
-              const SizedBox(width: 8),
-              Text(
-                entry.key,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color.fromARGB(255, 61, 56, 245),
+              const SizedBox(width: 10),
+              // Nombre de la categoría y monto
+              Expanded(
+                child: Text(
+                  '${entry.key}: \$${entry.value.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 21, 21, 21),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
