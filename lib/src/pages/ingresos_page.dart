@@ -401,8 +401,6 @@ class _IngresosPageState extends State<IngresosPage> {
   ));
 }
 
-
-
   // Método específico para gráfico de categorías de ingresos
   Widget _pieChartIngresos(Map<String, double> datos) {
     // Si no hay datos, mostrar placeholder
