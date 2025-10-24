@@ -35,15 +35,85 @@ class _AhorrosPageState extends State<AhorrosPage> {
     'Cumpleaños': 3000,
     'Fondo de Emergencia': 2000,
   };
+
+  // Método para obtener el icono según la categoría/subcategoría
+  IconData _obtenerIcono(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'web':
+      case 'páginas web':
+        return Icons.web;
+      case 'imagen':
+      case 'diseño gráfico':
+        return Icons.image;
+      case 'video':
+      case 'edición de video':
+        return Icons.video_library;
+      case 'pdf':
+      case 'documentos':
+        return Icons.picture_as_pdf;
+      case 'tienda':
+      case 'retail':
+        return Icons.store;
+      case 'educación':
+      case 'beca':
+        return Icons.school;
+      case 'invitaciones':
+        return Icons.card_giftcard;
+      case 'joyas':
+        return Icons.diamond;
+      default:
+        return Icons.attach_money;
+    }
+  }
+  
+  // Datos estructurados con categorías y subcategorías
+  final List<Map<String, dynamic>> datosCompletos = [
+    { 'categoria': 'Vacaciones', 'subcategoria': 'Web', 'monto': 5000 },
+    { 'categoria': 'Vacaciones', 'subcategoria': 'Imagen', 'monto': 3000 },
+    { 'categoria': 'Vacaciones', 'subcategoria': 'Video', 'monto': 8000 },
+    { 'categoria': 'Vacaciones', 'subcategoria': 'PDF', 'monto': 5000 },
+    { 'categoria': 'Joyas', 'subcategoria': 'Tienda', 'monto': 3000 },
+    { 'categoria': 'Beca', 'subcategoria': 'Educación', 'monto': 2000 },
+  ];
+
+  // Método para obtener subcategorías según la selección del dropdown
+  Map<String, double> _obtenerDatosParaGrafico() {
+    if (_opcionSeleccionadaDropdown == null) {
+      // Si no hay selección, mostrar todas las categorías principales
+      Map<String, double> categoriasPrincipales = {};
+      for (var categoria in _ahorros) {
+        double total = datosCompletos
+            .where((item) => item['categoria'] == categoria)
+            .fold(0.0, (sum, item) => sum + item['monto']);
+        if (total > 0) {
+          categoriasPrincipales[categoria] = total;
+        }
+      }
+      return categoriasPrincipales;
+    } else {
+      // Si hay una categoría seleccionada, mostrar sus subcategorías
+      Map<String, double> subcategorias = {};
+      var datosCategoria = datosCompletos
+          .where((item) => item['categoria'] == _opcionSeleccionadaDropdown)
+          .toList();
+      
+      for (var item in datosCategoria) {
+        subcategorias[item['subcategoria']] = item['monto'].toDouble();
+      }
+      return subcategorias;
+    }
+  }
   @override
   Widget build(BuildContext context) {
+    // Obtener datos dinámicos según la selección
+    final datosDinamicos = _obtenerDatosParaGrafico();
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text('Ahorros', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
-      body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoria(), _cardCargaAhorro(), _cardGrafico(datos), _pieChartResumen(datos)]),
+      body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoria(), _cardCargaAhorro(), _cardGrafico(datos), _cardGrafico(datosDinamicos)]),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 3,
@@ -290,7 +360,7 @@ class _AhorrosPageState extends State<AhorrosPage> {
               filled: true,
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Monto',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
@@ -311,7 +381,7 @@ class _AhorrosPageState extends State<AhorrosPage> {
               
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Detalle (opcional)',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
@@ -322,65 +392,8 @@ class _AhorrosPageState extends State<AhorrosPage> {
   ));
 }
 
- // Nuevo método: grafico de pastel para el resumen
-  Widget _pieChartResumen(Map<String, double> datos) {
-    final double ingresos = datos['ingresos'] ?? 0;
-    final double gastos = datos['gastos'] ?? 0;
-    final double ahorros = datos['ahorros'] ?? 0;
-
-    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
-    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
-      );
-    }
-
-    return SizedBox(
-      height: 160,
-      child: PieChart(
-        PieChartData(
-          sectionsSpace: 2,
-          centerSpaceRadius: 30,
-          sections: [
-            PieChartSectionData(
-              value: ingresos,
-              color: Colors.green,
-              title: '\$${ingresos.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: gastos,
-              color: Colors.orange,
-              title: '\$${gastos.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-            PieChartSectionData(
-              value: ahorros,
-              color: Colors.blue,
-              title: '\$${ahorros.toStringAsFixed(0)}',
-              radius: 40,
-              showTitle: true,
-              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-              borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Método específico para gráfico de categorías de ahorros
-  Widget _pieChartAhorros(Map<String, double> datos) {
+ // Método específico para gráfico de categorías de gastos
+  Widget _pieChartGastos(Map<String, double> datos) {
     // Si no hay datos, mostrar placeholder
     if (datos.isEmpty) {
       return const SizedBox(
@@ -391,26 +404,30 @@ class _AhorrosPageState extends State<AhorrosPage> {
 
     // Colores para las diferentes categorías
     final List<Color> colores = [
-      Colors.green,
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
     ];
 
+    // Calcular el total para los porcentajes
+    final double total = datos.values.reduce((a, b) => a + b);
+
     return SizedBox(
-      height: 160,
+      height: 200,
       child: PieChart(
         PieChartData(
           sectionsSpace: 2,
-          centerSpaceRadius: 30,
+          centerSpaceRadius: 60,
           sections: datos.entries.map((entry) {
             int index = datos.keys.toList().indexOf(entry.key);
+            double porcentaje = (entry.value / total) * 100;
             return PieChartSectionData(
               value: entry.value,
               color: colores[index % colores.length],
-              title: '\$${entry.value.toStringAsFixed(0)}',
+              title: '${porcentaje.toStringAsFixed(1)}%',
               radius: 40,
               showTitle: true,
               titleStyle: const TextStyle(
@@ -419,7 +436,7 @@ class _AhorrosPageState extends State<AhorrosPage> {
                 fontWeight: FontWeight.bold
               ),
               borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.6,
+              titlePositionPercentageOffset: 0.5,
             );
           }).toList(),
         ),
@@ -427,8 +444,13 @@ class _AhorrosPageState extends State<AhorrosPage> {
     );
   }
 
-  // Actualiza la card del gráfico para usar el nuevo método
+  
   Widget _cardGrafico(Map<String, double> datos) {
+    // Título dinámico según la selección
+    String titulo = _opcionSeleccionadaDropdown == null 
+        ? 'Resumen por Categorías' 
+        : 'Subcategorías de $_opcionSeleccionadaDropdown';
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -438,20 +460,20 @@ class _AhorrosPageState extends State<AhorrosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Resumen',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 61, 56, 245),
+            Text(
+              titulo,
+              style: const TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.normal,
+                color: Color.fromARGB(255, 25, 25, 26),
               ),
             ),
             const SizedBox(height: 10),
-            // Usa el método específico para ahorros
-            _pieChartAhorros(datos),
+            // Usa el método específico para ingresos
+            _pieChartGastos(datos),
             const SizedBox(height: 10),
-            // mostrar leyenda
-            _leyendaAhorros(datos),
+            // Opcional: mostrar leyenda
+            _leyendaGastos(datos),
           ],
         ),
       ),
@@ -459,37 +481,43 @@ class _AhorrosPageState extends State<AhorrosPage> {
   }
 
   // leyenda para identificar las categorías
-  Widget _leyendaAhorros(Map<String, double> datos) {
+  Widget _leyendaGastos(Map<String, double> datos) {
+    // Colores que coinciden con el gráfico
     final List<Color> colores = [
-      Colors.green,
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
+      const Color(0xff0293ee),
+      const Color(0xfff8b250),
+      const Color(0xff845bef),
+      const Color(0xff13d38e),
+      const Color(0xffff6b6b),
+      const Color(0xff4ecdc4),
     ];
 
     return Column(
       children: datos.entries.map((entry) {
         int index = datos.keys.toList().indexOf(entry.key);
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          padding: const EdgeInsets.symmetric(vertical: 6.0),
           child: Row(
             children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: colores[index % colores.length],
-                  shape: BoxShape.circle,
-                ),
+             
+              const SizedBox(width: 10),
+              // Icono específico para cada categoría
+              Icon(
+                _obtenerIcono(entry.key),
+                color: colores[index % colores.length],
+                size: 24,
               ),
-              const SizedBox(width: 8),
-              Text(
-                entry.key,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color.fromARGB(255, 61, 56, 245),
+              const SizedBox(width: 10),
+              // Nombre de la categoría y monto
+              Expanded(
+                child: Text(
+                  '${entry.key}: \$${entry.value.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color.fromARGB(255, 21, 21, 21),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

@@ -357,7 +357,7 @@ class _GastosPageState extends State<GastosPage> {
               filled: true,
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Monto',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
@@ -378,7 +378,7 @@ class _GastosPageState extends State<GastosPage> {
               
               fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
               hintText: 'Detalle (opcional)',
-              hintStyle: const TextStyle(color: Colors.black),
+              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
             style: const TextStyle(color: Colors.black),
