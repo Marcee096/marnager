@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marnager/src/pages/ahorros_page.dart' show AhorrosPage;
 import 'package:marnager/src/pages/gastos_page.dart';
 import 'package:marnager/src/pages/home_page.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class IngresosPage extends StatefulWidget {
   const IngresosPage({super.key});
@@ -31,7 +32,11 @@ class _IngresosPageState extends State<IngresosPage> {
     'Cobro',
     'Intereses',
   ];
-
+  final Map<String, double> datos = {
+    'Invitaciones': 5000,
+    'Joyas': 3000,
+    'Beca': 2000,
+  };
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +47,7 @@ class _IngresosPageState extends State<IngresosPage> {
       ),
       body: ListView(
         padding: const EdgeInsets.all(10.0),
-        children: [_cardFuente(), _cardCargaIngreso()],
+        children: [_cardFuente(), _cardCargaIngreso(), _cardGrafico(datos), _pieChartResumen(datos)],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -232,7 +237,7 @@ class _IngresosPageState extends State<IngresosPage> {
     );
   }
 
-  Widget _cardCargaIngreso() {
+  Widget _cardCargaIngreso(){
     return Card(
       elevation: 8.0,
       child: Padding(
@@ -240,61 +245,268 @@ class _IngresosPageState extends State<IngresosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            
-            const Text('Carga de datos'),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Adjuntar comprobante',
-                hintStyle: const TextStyle(color: Colors.black),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.attach_file, color: Colors.black),
-                  onPressed: () {
-                    // Acción para adjuntar archivo
-                  },
-                 
-                ),
-                
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text('Carga de datos'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      
+                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.camera_alt, size: 18), // Icono más pequeño
+                  ),
+                  
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(0), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.attach_file, size: 18), // Icono más pequeño
+                  ),
+                ],
               ),
-              style: const TextStyle(color: Colors.black),
+            ],
+          ),
+          const SizedBox(height: 15.0),
+          _crearDropdownCuentas(),
+          const SizedBox(height: 15.0),
+          Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
+              ),
+              filled: true,
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
+              hintText: 'Monto',
+              hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
-            const SizedBox(height: 15.0),
-            const Text('Carga manual'),
-            const SizedBox(height: 15.0),
-            _crearDropdownCuentas(),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Monto',
-                hintStyle: const TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+        const SizedBox(height: 15.0),
+        // TextField con el mismo estilo que el dropdown
+        Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
               ),
-              style: const TextStyle(color: Colors.black),
+              filled: true,
+              
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
+              hintText: 'Detalle (opcional)',
+              hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
-            const SizedBox(height: 15.0),
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Detalle (opcional)',
-                hintStyle: const TextStyle(color: Colors.black),
-              ),
-              style: const TextStyle(color: Colors.black),
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+      ],
+    ),
+  ));
+}
+
+   // Nuevo método: grafico de pastel para el resumen
+  Widget _pieChartResumen(Map<String, double> datos) {
+    final double ingresos = datos['ingresos'] ?? 0;
+    final double gastos = datos['gastos'] ?? 0;
+    final double ahorros = datos['ahorros'] ?? 0;
+
+    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
+    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    return SizedBox(
+      height: 160,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 30,
+          sections: [
+            PieChartSectionData(
+              value: ingresos,
+              color: Colors.green,
+              title: '\$${ingresos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: gastos,
+              color: Colors.orange,
+              title: '\$${gastos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: ahorros,
+              color: Colors.blue,
+              title: '\$${ahorros.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Método específico para gráfico de categorías de ingresos
+  Widget _pieChartIngresos(Map<String, double> datos) {
+    // Si no hay datos, mostrar placeholder
+    if (datos.isEmpty) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    // Colores para las diferentes categorías
+    final List<Color> colores = [
+      Colors.green,
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+    ];
+
+    return SizedBox(
+      height: 160,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 30,
+          sections: datos.entries.map((entry) {
+            int index = datos.keys.toList().indexOf(entry.key);
+            return PieChartSectionData(
+              value: entry.value,
+              color: colores[index % colores.length],
+              title: '\$${entry.value.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(
+                color: Colors.white, 
+                fontSize: 12, 
+                fontWeight: FontWeight.bold
+              ),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // Actualiza la card del gráfico para usar el nuevo método
+  Widget _cardGrafico(Map<String, double> datos) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: 8,
+      shadowColor: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Distribución de Ingresos',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 61, 56, 245),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Usa el método específico para ingresos
+            _pieChartIngresos(datos),
+            const SizedBox(height: 10),
+            // Opcional: mostrar leyenda
+            _leyendaIngresos(datos),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Opcional: agregar leyenda para identificar las categorías
+  Widget _leyendaIngresos(Map<String, double> datos) {
+    final List<Color> colores = [
+      Colors.green,
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+    ];
+
+    return Column(
+      children: datos.entries.map((entry) {
+        int index = datos.keys.toList().indexOf(entry.key);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          child: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: colores[index % colores.length],
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                entry.key,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 61, 56, 245),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }

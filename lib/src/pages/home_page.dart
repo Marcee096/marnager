@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marnager/src/pages/ahorros_page.dart';
 import 'package:marnager/src/pages/gastos_page.dart';
 import 'package:marnager/src/pages/ingresos_page.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -14,6 +15,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _indexInicial = 2; // Inicio como selección inicial
   late int _mesSeleccionado; // Se inicializa en initState
+  
 
   final List<String> _meses = [
     'Enero',
@@ -111,7 +113,7 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
-
+  
   // Método para obtener datos del mes seleccionado
   Map<String, double> _obtenerDatosMes() {
     // BD
@@ -122,9 +124,10 @@ class _HomePageState extends State<HomePage> {
 
     return {'ingresos': ingresos, 'gastos': gastos, 'ahorros': ahorros};
   }
-
+  
   @override
   Widget build(BuildContext context) {
+    final datos = _obtenerDatosMes();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hola, Marce', style: TextStyle(color: Colors.white)),
@@ -133,15 +136,11 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              // Acción al presionar el botón de configuración
-            },
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.info, color: Colors.white),
-            onPressed: () {
-              // Acción al presionar el botón de cerrar sesión
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -173,13 +172,17 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 20.0),
-          // Card de resumen
-          _cardResumen(),
+          // Card de resumen (ahora recibe los datos)
+          _cardResumen(datos),
           const SizedBox(height: 20.0),
           // Card de atajos
           _cardAtajos(),
           const SizedBox(height: 30.0),
+          // Card de gráfico (debajo de resumen)
+          _cardGrafico(datos),
+          const SizedBox(height: 20.0),
           _cardFuentesIngresos(),
+          const SizedBox(height: 30.0),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -246,9 +249,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _cardResumen() {
-    final datos = _obtenerDatosMes();
-
+  // ajustar firma para recibir datos
+  Widget _cardResumen(Map<String, double> datos) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -414,6 +416,92 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+          
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Nuevo método: grafico de pastel para el resumen
+  Widget _pieChartResumen(Map<String, double> datos) {
+    final double ingresos = datos['ingresos'] ?? 0;
+    final double gastos = datos['gastos'] ?? 0;
+    final double ahorros = datos['ahorros'] ?? 0;
+
+    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
+    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    return SizedBox(
+      height: 160,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 30,
+          sections: [
+            PieChartSectionData(
+              value: ingresos,
+              color: Colors.green,
+              title: '\$${ingresos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: gastos,
+              color: Colors.orange,
+              title: '\$${gastos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: ahorros,
+              color: Colors.blue,
+              title: '\$${ahorros.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Nueva card que contiene el gráfico
+  Widget _cardGrafico(Map<String, double> datos) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: 8,
+      shadowColor: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Distribución',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 61, 56, 245),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // reutiliza tu método de pie chart
+            _pieChartResumen(datos),
           ],
         ),
       ),
@@ -574,8 +662,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-
 
   Widget _cardFuentesIngresos() {
     return Card(

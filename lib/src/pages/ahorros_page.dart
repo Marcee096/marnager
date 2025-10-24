@@ -226,62 +226,91 @@ class _AhorrosPageState extends State<AhorrosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            
-            const Text('Carga de datos'),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Adjuntar comprobante',
-                hintStyle: const TextStyle(color: Colors.black),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.attach_file, color: Colors.black),
-                  onPressed: () {
-                    // Acción para adjuntar archivo
-                  },
-                 
-                ),
-                
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text('Carga de datos'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      
+                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.camera_alt, size: 18), // Icono más pequeño
+                  ),
+                  
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(0), // Reducido de 12 a 8
+                      elevation: 5,
+                      shadowColor: Colors.grey,
+                    ),
+                    onPressed: () {
+                      
+                    }, 
+                    child: const Icon(Icons.attach_file, size: 18), // Icono más pequeño
+                  ),
+                ],
               ),
-              style: const TextStyle(color: Colors.black),
-            ),
-            const SizedBox(height: 15.0),
-            const Text('Carga manual'),
-            const SizedBox(height: 15.0),
-            _crearDropdownCuentas(),
-            const SizedBox(height: 15.0),
-            TextField(
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Monto',
-                hintStyle: const TextStyle(color: Colors.black),
+            ],
+          ),
+          const SizedBox(height: 15.0),
+          _crearDropdownCuentas(),
+          const SizedBox(height: 15.0),
+          Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
               ),
-              style: const TextStyle(color: Colors.black),
+              filled: true,
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
+              hintText: 'Monto',
+              hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
             ),
-            const SizedBox(height: 15.0),
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                filled: true,
-                hintText: 'Detalle (opcional)',
-                hintStyle: const TextStyle(color: Colors.black),
-              ),
-              style: const TextStyle(color: Colors.black),
-            ),
-          ],
+            style: const TextStyle(color: Colors.black),
+          ),
         ),
-      ),
-    );
-
-  }
+        const SizedBox(height: 15.0),
+        // TextField con el mismo estilo que el dropdown
+        Container(
+          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
+          child: TextField(
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
+              ),
+              filled: true,
+              
+              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
+              hintText: 'Detalle (opcional)',
+              hintStyle: const TextStyle(color: Colors.black),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
+            ),
+            style: const TextStyle(color: Colors.black),
+          ),
+        ),
+      ],
+    ),
+  ));
+}
 }
