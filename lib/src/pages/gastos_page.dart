@@ -236,6 +236,8 @@ class _GastosPageState extends State<GastosPage> {
             children: <Widget>[
               const Text('Carga de datos'),
               Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -252,13 +254,13 @@ class _GastosPageState extends State<GastosPage> {
                     }, 
                     child: const Icon(Icons.camera_alt, size: 18), // Icono más pequeño
                   ),
-                  const SizedBox(width: 4.0), // Reducido de 8.0 a 4.0
+                  
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 61, 56, 245),
                       foregroundColor: Colors.white,
                       shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
+                      padding: const EdgeInsets.all(0), // Reducido de 12 a 8
                       elevation: 5,
                       shadowColor: Colors.grey,
                     ),

@@ -575,6 +575,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+
   Widget _cardFuentesIngresos() {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -604,4 +606,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  
 }
