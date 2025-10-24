@@ -431,7 +431,7 @@ class _IngresosPageState extends State<IngresosPage> {
       child: PieChart(
         PieChartData(
           sectionsSpace: 2,
-          centerSpaceRadius: 50,
+          centerSpaceRadius: 60,
           sections: datos.entries.map((entry) {
             int index = datos.keys.toList().indexOf(entry.key);
             double porcentaje = (entry.value / total) * 100;
@@ -439,15 +439,15 @@ class _IngresosPageState extends State<IngresosPage> {
               value: entry.value,
               color: colores[index % colores.length],
               title: '${porcentaje.toStringAsFixed(1)}%',
-              radius: 60,
+              radius: 40,
               showTitle: true,
               titleStyle: const TextStyle(
                 color: Colors.white, 
-                fontSize: 14, 
+                fontSize: 12, 
                 fontWeight: FontWeight.bold
               ),
               borderSide: BorderSide.none,
-              titlePositionPercentageOffset: 0.7,
+              titlePositionPercentageOffset: 0.5,
             );
           }).toList(),
         ),
@@ -455,7 +455,7 @@ class _IngresosPageState extends State<IngresosPage> {
     );
   }
 
-  // Actualiza la card del gráfico para usar el nuevo método
+  
   Widget _cardGrafico(Map<String, double> datos) {
     // Título dinámico según la selección
     String titulo = _opcionSeleccionadaDropdown == null 
