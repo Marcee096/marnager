@@ -450,7 +450,7 @@ class _IngresosPageState extends State<IngresosPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Distribución de Ingresos',
+              'Resumen',
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
@@ -469,7 +469,7 @@ class _IngresosPageState extends State<IngresosPage> {
     );
   }
 
-  // Opcional: agregar leyenda para identificar las categorías
+  // leyenda para identificar las categorías
   Widget _leyendaIngresos(Map<String, double> datos) {
     final List<Color> colores = [
       Colors.green,

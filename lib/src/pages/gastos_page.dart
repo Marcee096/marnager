@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:marnager/src/pages/ahorros_page.dart';
 import 'package:marnager/src/pages/home_page.dart';
 import 'package:marnager/src/pages/ingresos_page.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class GastosPage extends StatefulWidget {
   const GastosPage({super.key});
@@ -29,7 +30,11 @@ class GastosPage extends StatefulWidget {
       'Cuenta Ahorro',
     ];
 
-   
+   final Map<String, double> datosResumen = {
+    'comida': 5000,
+    'transporte': 3000,
+    'entretenimiento': 2000,
+  };
 
 class _GastosPageState extends State<GastosPage> {
   @override
@@ -40,7 +45,7 @@ class _GastosPageState extends State<GastosPage> {
         title: const Text('Gastos',style: TextStyle(color: Colors.white),),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
       ),
-       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto(), _cardCargaGasto()]),
+       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto(), _cardCargaGasto(), _cardGrafico(datosResumen),_pieChartResumen(datosResumen)],),
        bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 1,
@@ -317,4 +322,182 @@ class _GastosPageState extends State<GastosPage> {
       ],
     ),
   ));
-}}
+}
+
+ // Nuevo método: grafico de pastel para el resumen
+  Widget _pieChartResumen(Map<String, double> datos) {
+    final double ingresos = datos['ingresos'] ?? 0;
+    final double gastos = datos['gastos'] ?? 0;
+    final double ahorros = datos['ahorros'] ?? 0;
+
+    // Si todos son 0, mostrar placeholder (evita división por 0 visualmente)
+    if (ingresos == 0 && gastos == 0 && ahorros == 0) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    return SizedBox(
+      height: 160,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 30,
+          sections: [
+            PieChartSectionData(
+              value: ingresos,
+              color: Colors.green,
+              title: '\$${ingresos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: gastos,
+              color: Colors.orange,
+              title: '\$${gastos.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+            PieChartSectionData(
+              value: ahorros,
+              color: Colors.blue,
+              title: '\$${ahorros.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Método específico para gráfico de categorías de gastos
+  Widget _pieChartGastos(Map<String, double> datos) {
+    // Si no hay datos, mostrar placeholder
+    if (datos.isEmpty) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+      );
+    }
+
+    // Colores para las diferentes categorías
+    final List<Color> colores = [
+      Colors.green,
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+    ];
+
+    return SizedBox(
+      height: 160,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 30,
+          sections: datos.entries.map((entry) {
+            int index = datos.keys.toList().indexOf(entry.key);
+            return PieChartSectionData(
+              value: entry.value,
+              color: colores[index % colores.length],
+              title: '\$${entry.value.toStringAsFixed(0)}',
+              radius: 40,
+              showTitle: true,
+              titleStyle: const TextStyle(
+                color: Colors.white, 
+                fontSize: 12, 
+                fontWeight: FontWeight.bold
+              ),
+              borderSide: BorderSide.none,
+              titlePositionPercentageOffset: 0.6,
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // Actualiza la card del gráfico para usar el nuevo método
+  Widget _cardGrafico(Map<String, double> datos) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: 8,
+      shadowColor: Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Resumen',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 61, 56, 245),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Usa el método específico para gastos
+            _pieChartGastos(datos),
+            const SizedBox(height: 10),
+            // Opcional: mostrar leyenda
+            _leyendaGastos(datos),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // leyenda para identificar las categorías
+  Widget _leyendaGastos(Map<String, double> datos) {
+    final List<Color> colores = [
+      Colors.green,
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+    ];
+
+    return Column(
+      children: datos.entries.map((entry) {
+        int index = datos.keys.toList().indexOf(entry.key);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2.0),
+          child: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: colores[index % colores.length],
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                entry.key,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 61, 56, 245),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
