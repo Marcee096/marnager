@@ -282,6 +282,7 @@ class _GastosPageState extends State<GastosPage> {
           _crearDropdownCuentas(),
           const SizedBox(height: 15.0),
           Container(
+            width: 250.0,
           margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
           child: TextField(
             keyboardType: TextInputType.number,
@@ -302,6 +303,7 @@ class _GastosPageState extends State<GastosPage> {
         const SizedBox(height: 15.0),
         // TextField con el mismo estilo que el dropdown
         Container(
+          width: 250.0,
           margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
           child: TextField(
             decoration: InputDecoration(
