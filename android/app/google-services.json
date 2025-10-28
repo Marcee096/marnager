@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "216614603367",
+    "project_id": "marnager-ecf30",
+    "storage_bucket": "marnager-ecf30.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:216614603367:android:83e02b903a42eb585322c2",
+        "android_client_info": {
+          "package_name": "com.example.marnager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy3YPf4BmbIqv2gVPyQlOBOdmhzDgBC5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:216614603367:android:8ab70c2ca313f0a05322c2",
+        "android_client_info": {
+          "package_name": "com.example.marnagerandroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy3YPf4BmbIqv2gVPyQlOBOdmhzDgBC5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
