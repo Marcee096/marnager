@@ -35,12 +35,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB05pLdrwrXpBdYO_HokL9J1LP3DF4jDcg',
-    appId: '1:536957137727:web:7017133bfa4ac46af9598a',
-    messagingSenderId: '536957137727',
-    projectId: 'practico2-f3f38',
-    authDomain: 'practico2-f3f38.firebaseapp.com',
-    storageBucket: 'practico2-f3f38.firebasestorage.app',
+    apiKey: "AIzaSyBCQepQBp5boGKDa-4b8eqidNPjHOhjNE8",
+    authDomain: "marnager-ecf30.firebaseapp.com",
+    projectId: "marnager-ecf30",
+    storageBucket: "marnager-ecf30.firebasestorage.app",
+    messagingSenderId: "216614603367",
+    appId: "1:216614603367:web:0cff121b396161d75322c2"
   );
 
 
@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '536957137727',
     projectId: 'practico2-f3f38',
     authDomain: 'practico2-f3f38.firebaseapp.com',
-    storageBucket: 'com.example.marnagerandroid',
+    storageBucket: 'com.example.marnager',
   );
 
 }
