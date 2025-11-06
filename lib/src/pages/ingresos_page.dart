@@ -422,56 +422,63 @@ class _IngresosPageState extends State<IngresosPage> {
   }
 
   Widget _cardCargaIngreso() {
-    return Card(
-      elevation: 8.0,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                const Text('Carga de datos'),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                        foregroundColor: Colors.white,
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(8),
-                        elevation: 5,
-                      ),
+  return Card(
+    elevation: 8.0,
+    child: Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          // Encabezado con título y botones juntos
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text(
+                'Carga de datos',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(95, 200, 200, 206),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.camera_alt, color: Color.fromARGB(255, 61, 56, 245), size: 20),
                       onPressed: () {
-                        
+                        // Acción cámara
                       },
-                      child: const Icon(Icons.camera_alt, size: 18),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                        foregroundColor: Colors.white,
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(8),
-                        elevation: 5,
-                      ),
+                    Container(
+                      width: 1,
+                      height: 20,
+                      color: Colors.white,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.attach_file, color: Color.fromARGB(255, 61, 56, 245), size: 20),
                       onPressed: () {
-                        
+                        // Acción adjuntar
                       },
-                      child: const Icon(Icons.attach_file, size: 18),
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 15.0),
-            _crearDropdownCuentas(),
-            const SizedBox(height: 15.0),
-            Container(
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20.0),
+
+          // Dropdown
+          _crearDropdownCuentas(),
+          const SizedBox(height: 15.0),
+
+          // Campo monto
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: SizedBox(
               width: 250.0,
-              margin: const EdgeInsets.only(left: 10.0),
               child: TextField(
                 controller: _montoController,
                 keyboardType: TextInputType.number,
@@ -484,15 +491,21 @@ class _IngresosPageState extends State<IngresosPage> {
                   fillColor: const Color.fromARGB(255, 232, 232, 236),
                   hintText: 'Monto',
                   hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 ),
                 style: const TextStyle(color: Colors.black),
               ),
             ),
-            const SizedBox(height: 15.0),
-            Container(
+          ),
+
+          const SizedBox(height: 15.0),
+
+          // Campo detalle
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: SizedBox(
               width: 250.0,
-              margin: const EdgeInsets.only(left: 10.0),
               child: TextField(
                 controller: _detalleController,
                 decoration: InputDecoration(
@@ -504,31 +517,45 @@ class _IngresosPageState extends State<IngresosPage> {
                   fillColor: const Color.fromARGB(255, 232, 232, 236),
                   hintText: 'Detalle (opcional)',
                   hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 ),
                 style: const TextStyle(color: Colors.black),
               ),
             ),
-            const SizedBox(height: 15.0),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+          ),
+
+          const SizedBox(height: 20.0),
+
+          // Botón guardar alineado con los textfields
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 130.0,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
+                  onPressed: _guardarIngreso,
+                  child: const Text('Guardar Ingreso', style: TextStyle(fontSize: 13)),
                 ),
-                onPressed: _guardarIngreso,
-                child: const Text('Guardar Ingreso'),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+
 
   Widget _pieChartIngresos(Map<String, double> datos) {
     if (datos.isEmpty) {
