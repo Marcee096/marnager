@@ -37,12 +37,8 @@ class _LoginPageState extends State<LoginPage> {
     final usuario = usuarioController.text.trim();
     final pass = passwordController.text.trim();
 
-    print('🔍 Iniciando sesión...');
-    print('Usuario ingresado: $usuario');
-
     // Validar campos vacíos
     if (usuario.isEmpty || pass.isEmpty) {
-      print('❌ Campos vacíos detectados');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor complete todos los campos'),
@@ -57,18 +53,15 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      print('🔄 Intentando iniciar sesión en Firebase Auth...');
       
       // Determinar si el usuario es un email válido o no
       String email;
       if (_esEmailValido(usuario)) {
         // Si es un email válido, usar directamente
         email = usuario;
-        print('✅ Email válido detectado: $email');
       } else {
         // Si no es un email válido, agregar @app.com
         email = '$usuario@app.com';
-        print('✅ Email generado: $email');
       }
 
       // Intentar iniciar sesión
@@ -76,9 +69,8 @@ class _LoginPageState extends State<LoginPage> {
         email: email,
         password: pass,
       );
-
-      print('✅ Inicio de sesión exitoso: ${cred.user!.uid}');
-
+      
+      print('Inicio de sesión exitoso: ${cred.user?.uid}');
       setState(() {
         _isLoading = false;
       });
@@ -104,9 +96,7 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
 
-      print('❌ FirebaseAuthException: ${e.code}');
-      print('❌ Mensaje: ${e.message}');
-      
+    
       String mensaje = 'Error al iniciar sesión';
       bool mostrarRegistro = false;
       
@@ -164,13 +154,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() {
         _isLoading = false;
       });
 
-      print('❌ Error inesperado: $e');
-      print('❌ StackTrace: $stackTrace');
+  
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -234,7 +223,6 @@ class _LoginPageState extends State<LoginPage> {
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
                     onTap: () {
-                      // TODO: Implementar recuperación de contraseña
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Funcionalidad en desarrollo'),
@@ -298,7 +286,7 @@ class _LoginPageState extends State<LoginPage> {
           // Indicador de carga en pantalla completa
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black,
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               ),

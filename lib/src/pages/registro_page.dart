@@ -35,14 +35,10 @@ class RegistroPageState extends State<RegistroPage> {
     final pass = passwordController.text.trim();
     final confirm = confirmController.text.trim();
 
-    print('🔍 Iniciando registro...');
-    print('Nombre: $nombre');
-    print('Usuario: $usuario');
-    print('Password length: ${pass.length}');
 
     // Validar campos vacíos
     if (nombre.isEmpty || usuario.isEmpty || pass.isEmpty || confirm.isEmpty) {
-      print('❌ Campos vacíos detectados');
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor complete todos los campos')),
       );
@@ -51,7 +47,7 @@ class RegistroPageState extends State<RegistroPage> {
 
     // Validar que las contraseñas coincidan
     if (pass != confirm) {
-      print('❌ Las contraseñas no coinciden');
+  
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Las contraseñas no coinciden')),
       );
@@ -60,7 +56,7 @@ class RegistroPageState extends State<RegistroPage> {
 
     // Validar longitud mínima de contraseña
     if (pass.length < 6) {
-      print('❌ Contraseña muy corta');
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres')),
       );
@@ -72,18 +68,16 @@ class RegistroPageState extends State<RegistroPage> {
     });
 
     try {
-      print('🔄 Intentando crear usuario en Firebase Auth...');
       
       // Determinar si el usuario ya es un email o no
       String email;
       if (usuario.contains('@')) {
         // Si ya contiene @, usar como email directamente
         email = usuario;
-        print('✅ Usuario es email: $email');
       } else {
         // Si no, agregar @app.com
         email = '$usuario@app.com';
-        print('✅ Email generado: $email');
+        
       }
       
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -91,9 +85,7 @@ class RegistroPageState extends State<RegistroPage> {
         password: pass,
       );
 
-      print('✅ Usuario creado en Auth: ${cred.user!.uid}');
-      print('🔄 Guardando en Firestore...');
-
+      
       // Guardar datos en Firestore
       await _db.collection('usuarios').doc(cred.user!.uid).set({
         'nombre': nombre,
@@ -103,7 +95,7 @@ class RegistroPageState extends State<RegistroPage> {
         'creadoEn': Timestamp.now(),
       });
 
-      print('✅ Datos guardados en Firestore');
+      
 
       setState(() {
         _isLoading = false;
@@ -119,7 +111,7 @@ class RegistroPageState extends State<RegistroPage> {
           ),
         );
 
-        print('✅ Registro completado, redirigiendo...');
+       
 
         // Esperar un momento para que se vea el SnackBar
         await Future.delayed(const Duration(seconds: 1));
@@ -134,8 +126,7 @@ class RegistroPageState extends State<RegistroPage> {
         _isLoading = false;
       });
 
-      print('❌ FirebaseAuthException: ${e.code}');
-      print('❌ Mensaje: ${e.message}');
+     
       
       String mensaje = 'Error al registrar';
       
@@ -176,9 +167,7 @@ class RegistroPageState extends State<RegistroPage> {
         _isLoading = false;
       });
 
-      print('❌ FirebaseException: ${e.code}');
-      print('❌ Mensaje: ${e.message}');
-
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -188,13 +177,12 @@ class RegistroPageState extends State<RegistroPage> {
           ),
         );
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() {
         _isLoading = false;
       });
 
-      print('❌ Error inesperado: $e');
-      print('❌ StackTrace: $stackTrace');
+    
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -344,7 +332,7 @@ class RegistroPageState extends State<RegistroPage> {
           // Indicador de carga en pantalla completa
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black,
               child: const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               ),

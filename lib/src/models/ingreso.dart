@@ -6,6 +6,7 @@ class Ingreso {
   final String subcategoria;
   final double monto;
   final DateTime fecha;
+  final String? detalle; // Campo opcional para detalles
 
   Ingreso({
     required this.id,
@@ -13,6 +14,7 @@ class Ingreso {
     required this.subcategoria,
     required this.monto,
     required this.fecha,
+    this.detalle,
   });
 
   /// Convertir el ingreso a Map para Firestore
@@ -22,6 +24,7 @@ class Ingreso {
       'subcategoria': subcategoria,
       'monto': monto,
       'fecha': Timestamp.fromDate(fecha),
+      if (detalle != null && detalle!.isNotEmpty) 'detalle': detalle,
     };
   }
 
@@ -45,6 +48,7 @@ class Ingreso {
       subcategoria: map['subcategoria'] as String? ?? '',
       monto: montoDouble,
       fecha: (map['fecha'] as Timestamp).toDate(),
+      detalle: map['detalle'] as String?, // Agregar campo detalle
     );
   }
 
@@ -55,6 +59,7 @@ class Ingreso {
     String? subcategoria,
     double? monto,
     DateTime? fecha,
+    String? detalle,
   }) {
     return Ingreso(
       id: id ?? this.id,
@@ -62,6 +67,7 @@ class Ingreso {
       subcategoria: subcategoria ?? this.subcategoria,
       monto: monto ?? this.monto,
       fecha: fecha ?? this.fecha,
+      detalle: detalle ?? this.detalle,
     );
   }
 }

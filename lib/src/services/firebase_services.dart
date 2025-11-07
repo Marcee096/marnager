@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/ahorro.dart';
 import '../models/ingreso.dart';
 import '../models/gasto.dart';
@@ -8,269 +9,201 @@ class FirebaseServices {
 
   FirebaseServices._init();
 
-  final String collectionGastos = 'gastos';
-  final String collectionAhorros = 'ahorros';
-  final String collectionIngresos = 'ingresos';
-
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Obtener el UID del usuario actual
+  String? get currentUserId => _auth.currentUser?.uid;
+
+  // Obtener referencia a la subcolección de ingresos del usuario actual
+  CollectionReference _getUserIngresosCollection() {
+    if (currentUserId == null) {
+      throw Exception('Usuario no autenticado');
+    }
+    return _db.collection('usuarios').doc(currentUserId).collection('ingresos');
+  }
+
+  // Obtener referencia a la subcolección de gastos del usuario actual
+  CollectionReference _getUserGastosCollection() {
+    if (currentUserId == null) {
+      throw Exception('Usuario no autenticado');
+    }
+    return _db.collection('usuarios').doc(currentUserId).collection('gastos');
+  }
+
+  // Obtener referencia a la subcolección de ahorros del usuario actual
+  CollectionReference _getUserAhorrosCollection() {
+    if (currentUserId == null) {
+      throw Exception('Usuario no autenticado');
+    }
+    return _db.collection('usuarios').doc(currentUserId).collection('ahorros');
+  }
 
   // ========== MÉTODOS PARA INGRESOS ==========
 
-  /// Obtener todos los ingresos
+  /// Obtener todos los ingresos del usuario actual
   Future<List<Ingreso>> getAllIngresos() async {
-    final snapshot = await _db.collection(collectionIngresos).get();
+    final snapshot = await _getUserIngresosCollection().get();
     return snapshot.docs
-        .map((doc) => Ingreso.fromMap(doc.data(), doc.id))
+        .map((doc) => Ingreso.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener ingresos por mes y año
+  /// Obtener ingresos por mes y año del usuario actual
   Future<List<Ingreso>> getIngresosByMonth(int month, int year) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
 
-    final snapshot = await _db
-        .collection(collectionIngresos)
+    final snapshot = await _getUserIngresosCollection()
         .where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .get();
 
     return snapshot.docs
-        .map((doc) => Ingreso.fromMap(doc.data(), doc.id))
+        .map((doc) => Ingreso.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener ingresos por categoría
+  /// Obtener ingresos por categoría del usuario actual
   Future<List<Ingreso>> getIngresosByCategoria(String categoria) async {
-    final snapshot = await _db
-        .collection(collectionIngresos)
+    final snapshot = await _getUserIngresosCollection()
         .where('categoria', isEqualTo: categoria)
         .get();
 
     return snapshot.docs
-        .map((doc) => Ingreso.fromMap(doc.data(), doc.id))
+        .map((doc) => Ingreso.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener un ingreso por ID
+  /// Obtener un ingreso por ID del usuario actual
   Future<Ingreso?> getIngresoById(String id) async {
-    final doc = await _db.collection(collectionIngresos).doc(id).get();
+    final doc = await _getUserIngresosCollection().doc(id).get();
     if (!doc.exists) return null;
-    return Ingreso.fromMap(doc.data()!, doc.id);
+    return Ingreso.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
-  /// Insertar un nuevo ingreso
+  /// Insertar un nuevo ingreso para el usuario actual
   Future<String> insertIngreso(Ingreso ingreso) async {
-    final docRef =
-        await _db.collection(collectionIngresos).add(ingreso.toMap());
+    final docRef = await _getUserIngresosCollection().add(ingreso.toMap());
     return docRef.id;
   }
 
-  /// Actualizar un ingreso existente
+  /// Actualizar un ingreso existente del usuario actual
   Future<void> updateIngreso(Ingreso ingreso) async {
-    await _db
-        .collection(collectionIngresos)
+    await _getUserIngresosCollection()
         .doc(ingreso.id)
         .update(ingreso.toMap());
   }
 
-  /// Eliminar un ingreso por ID
+  /// Eliminar un ingreso por ID del usuario actual
   Future<void> deleteIngreso(String id) async {
-    await _db.collection(collectionIngresos).doc(id).delete();
+    await _getUserIngresosCollection().doc(id).delete();
   }
 
-  /// Obtener stream de ingresos en tiempo real
+  /// Obtener stream de ingresos en tiempo real del usuario actual
   Stream<List<Ingreso>> getIngresosStream() {
-    return _db.collection(collectionIngresos).snapshots().map(
+    return _getUserIngresosCollection().snapshots().map(
           (snapshot) => snapshot.docs
-              .map((doc) => Ingreso.fromMap(doc.data(), doc.id))
+              .map((doc) => Ingreso.fromMap(doc.data() as Map<String, dynamic>, doc.id))
               .toList(),
         );
   }
 
-  /// Calcular total de ingresos por mes
+  /// Calcular total de ingresos por mes del usuario actual
   Future<double> calcularTotalIngresosMes(int month, int year) async {
-  final ingresos = await getIngresosByMonth(month, year);
+    final ingresos = await getIngresosByMonth(month, year);
 
-  return ingresos.fold<double>(
-    0.0,
-    (sum, ingreso) => sum + ingreso.monto,
-  );
-}
-
+    return ingresos.fold<double>(
+      0.0,
+      (sum, ingreso) => sum + ingreso.monto,
+    );
+  }
 
   // ========== MÉTODOS PARA GASTOS ==========
 
-  /// Obtener todos los gastos
+  /// Obtener todos los gastos del usuario actual
   Future<List<Gasto>> getAllGastos() async {
-    final snapshot = await _db.collection(collectionGastos).get();
+    final snapshot = await _getUserGastosCollection().get();
     return snapshot.docs
-        .map((doc) => Gasto.fromMap(doc.data(), doc.id))
+        .map((doc) => Gasto.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener gastos por mes y año
+  /// Obtener gastos por mes y año del usuario actual
   Future<List<Gasto>> getGastosByMonth(int month, int year) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
 
-    final snapshot = await _db
-        .collection(collectionGastos)
+    final snapshot = await _getUserGastosCollection()
         .where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .get();
 
     return snapshot.docs
-        .map((doc) => Gasto.fromMap(doc.data(), doc.id))
+        .map((doc) => Gasto.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener gastos por categoría
-  Future<List<Gasto>> getGastosByCategoria(String categoria) async {
-    final snapshot = await _db
-        .collection(collectionGastos)
-        .where('categoria', isEqualTo: categoria)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => Gasto.fromMap(doc.data(), doc.id))
-        .toList();
-  }
-
-  /// Obtener un gasto por ID
-  Future<Gasto?> getGastoById(String id) async {
-    final doc = await _db.collection(collectionGastos).doc(id).get();
-    if (!doc.exists) return null;
-    return Gasto.fromMap(doc.data()!, doc.id);
-  }
-
-  /// Insertar un nuevo gasto
+  /// Insertar un nuevo gasto para el usuario actual
   Future<String> insertGasto(Gasto gasto) async {
-    final docRef = await _db.collection(collectionGastos).add(gasto.toMap());
+    final docRef = await _getUserGastosCollection().add(gasto.toMap());
     return docRef.id;
   }
 
-  /// Actualizar un gasto existente
-  Future<void> updateGasto(Gasto gasto) async {
-    await _db
-        .collection(collectionGastos)
-        .doc(gasto.id)
-        .update(gasto.toMap());
-  }
-
-  /// Eliminar un gasto por ID
-  Future<void> deleteGasto(String id) async {
-    await _db.collection(collectionGastos).doc(id).delete();
-  }
-
-  /// Obtener stream de gastos en tiempo real
-  Stream<List<Gasto>> getGastosStream() {
-    return _db.collection(collectionGastos).snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Gasto.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
-  }
-
-  /// Calcular total de gastos por mes
+  /// Calcular total de gastos por mes del usuario actual
   Future<double> calcularTotalGastosMes(int month, int year) async {
-  final gastos = await getGastosByMonth(month, year);
+    final gastos = await getGastosByMonth(month, year);
 
-  
-  return gastos.fold<double>(
-    0.0,
-    (sum, gasto) => sum + gasto.monto,
-  );
-}
-
+    return gastos.fold<double>(
+      0.0,
+      (sum, gasto) => sum + gasto.monto,
+    );
+  }
 
   // ========== MÉTODOS PARA AHORROS ==========
 
-  /// Obtener todos los ahorros
+  /// Obtener todos los ahorros del usuario actual
   Future<List<Ahorro>> getAllAhorros() async {
-    final snapshot = await _db.collection(collectionAhorros).get();
+    final snapshot = await _getUserAhorrosCollection().get();
     return snapshot.docs
-        .map((doc) => Ahorro.fromMap(doc.data(), doc.id))
+        .map((doc) => Ahorro.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener ahorros por mes y año
+  /// Obtener ahorros por mes y año del usuario actual
   Future<List<Ahorro>> getAhorrosByMonth(int month, int year) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0, 23, 59, 59);
 
-    final snapshot = await _db
-        .collection(collectionAhorros)
+    final snapshot = await _getUserAhorrosCollection()
         .where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
         .where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
         .get();
 
     return snapshot.docs
-        .map((doc) => Ahorro.fromMap(doc.data(), doc.id))
+        .map((doc) => Ahorro.fromMap(doc.data() as Map<String, dynamic>, doc.id))
         .toList();
   }
 
-  /// Obtener ahorros por categoría
-  Future<List<Ahorro>> getAhorrosByCategoria(String categoria) async {
-    final snapshot = await _db
-        .collection(collectionAhorros)
-        .where('categoria', isEqualTo: categoria)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => Ahorro.fromMap(doc.data(), doc.id))
-        .toList();
-  }
-
-  /// Obtener un ahorro por ID
-  Future<Ahorro?> getAhorroById(String id) async {
-    final doc = await _db.collection(collectionAhorros).doc(id).get();
-    if (!doc.exists) return null;
-    return Ahorro.fromMap(doc.data()!, doc.id);
-  }
-
-  /// Insertar un nuevo ahorro
+  /// Insertar un nuevo ahorro para el usuario actual
   Future<String> insertAhorro(Ahorro ahorro) async {
-    final docRef = await _db.collection(collectionAhorros).add(ahorro.toMap());
+    final docRef = await _getUserAhorrosCollection().add(ahorro.toMap());
     return docRef.id;
   }
 
-  /// Actualizar un ahorro existente
-  Future<void> updateAhorro(Ahorro ahorro) async {
-    await _db
-        .collection(collectionAhorros)
-        .doc(ahorro.id)
-        .update(ahorro.toMap());
-  }
-
-  /// Eliminar un ahorro por ID
-  Future<void> deleteAhorro(String id) async {
-    await _db.collection(collectionAhorros).doc(id).delete();
-  }
-
-  /// Obtener stream de ahorros en tiempo real
-  Stream<List<Ahorro>> getAhorrosStream() {
-    return _db.collection(collectionAhorros).snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Ahorro.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
-  }
-
-  /// Calcular total de ahorros por mes
+  /// Calcular total de ahorros por mes del usuario actual
   Future<double> calcularTotalAhorrosMes(int month, int year) async {
-  final ahorros = await getAhorrosByMonth(month, year);
+    final ahorros = await getAhorrosByMonth(month, year);
 
-  return ahorros.fold<double>(
-    0.0,
-    (sum, ahorro) => sum + ahorro.monto,
-  );
-}
-
+    return ahorros.fold<double>(
+      0.0,
+      (sum, ahorro) => sum + ahorro.monto,
+    );
+  }
 
   // ========== MÉTODOS COMBINADOS/REPORTES ==========
 
-  /// Obtener resumen del mes (ingresos, gastos, ahorros)
+  /// Obtener resumen del mes (ingresos, gastos, ahorros) del usuario actual
   Future<Map<String, double>> getResumenMes(int month, int year) async {
     final ingresos = await calcularTotalIngresosMes(month, year);
     final gastos = await calcularTotalGastosMes(month, year);
@@ -283,7 +216,7 @@ class FirebaseServices {
     };
   }
 
-  /// Obtener datos agrupados por categoría para ingresos
+  /// Obtener datos agrupados por categoría para ingresos del usuario actual
   Future<Map<String, double>> getIngresosPorCategoria(
       int month, int year) async {
     final ingresos = await getIngresosByMonth(month, year);
@@ -297,7 +230,7 @@ class FirebaseServices {
     return agrupado;
   }
 
-  /// Obtener datos agrupados por categoría para gastos
+  /// Obtener datos agrupados por categoría para gastos del usuario actual
   Future<Map<String, double>> getGastosPorCategoria(
       int month, int year) async {
     final gastos = await getGastosByMonth(month, year);
@@ -311,7 +244,7 @@ class FirebaseServices {
     return agrupado;
   }
 
-  /// Obtener datos agrupados por categoría para ahorros
+  /// Obtener datos agrupados por categoría para ahorros del usuario actual
   Future<Map<String, double>> getAhorrosPorCategoria(
       int month, int year) async {
     final ahorros = await getAhorrosByMonth(month, year);

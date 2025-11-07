@@ -67,7 +67,6 @@ class _IngresosPageState extends State<IngresosPage> {
         _isLoading = false;
       });
     } catch (e) {
-      
       setState(() {
         _isLoading = false;
       });
@@ -105,17 +104,19 @@ class _IngresosPageState extends State<IngresosPage> {
 
     try {
       final monto = double.parse(_montoController.text);
+      final detalle = _detalleController.text.trim();
       
-      // Crear el objeto Ingreso
+      // Crear el objeto Ingreso con el campo detalle
       final nuevoIngreso = Ingreso(
         id: '', // Se genera automáticamente en Firebase
         categoria: _opcionSeleccionadaDropdown!,
         subcategoria: ingresoSeleccionado!,
         monto: monto,
         fecha: DateTime.now(),
+        detalle: detalle.isNotEmpty ? detalle : null,
       );
 
-      // Guardar en Firebase
+      // Guardar en Firebase (automáticamente se guarda en la subcolección del usuario actual)
       await _firebaseServices.insertIngreso(nuevoIngreso);
 
       // Limpiar campos
@@ -131,14 +132,19 @@ class _IngresosPageState extends State<IngresosPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ingreso guardado exitosamente')),
+          const SnackBar(
+            content: Text('Ingreso guardado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e')),
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -422,140 +428,138 @@ class _IngresosPageState extends State<IngresosPage> {
   }
 
   Widget _cardCargaIngreso() {
-  return Card(
-    elevation: 8.0,
-    child: Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          // Encabezado con título y botones juntos
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text(
-                'Carga de datos',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(95, 200, 200, 206),
-                  borderRadius: BorderRadius.circular(30),
+    return Card(
+      elevation: 8.0,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            // Encabezado con título y botones juntos
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text(
+                  'Carga de datos',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.camera_alt, color: Color.fromARGB(255, 61, 56, 245), size: 20),
-                      onPressed: () {
-                        // Acción cámara
-                      },
-                    ),
-                    Container(
-                      width: 1,
-                      height: 20,
-                      color: Colors.white,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.attach_file, color: Color.fromARGB(255, 61, 56, 245), size: 20),
-                      onPressed: () {
-                        // Acción adjuntar
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20.0),
-
-          // Dropdown
-          _crearDropdownCuentas(),
-          const SizedBox(height: 15.0),
-
-          // Campo monto
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: SizedBox(
-              width: 250.0,
-              child: TextField(
-                controller: _montoController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide.none,
+                
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(95, 200, 200, 206),
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  filled: true,
-                  fillColor: const Color.fromARGB(255, 232, 232, 236),
-                  hintText: 'Monto',
-                  hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                ),
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 15.0),
-
-          // Campo detalle
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: SizedBox(
-              width: 250.0,
-              child: TextField(
-                controller: _detalleController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                    borderSide: BorderSide.none,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                        onPressed: () {
+                          // TODO: Implementar cámara
+                        },
+                      ),
+                      Container(
+                        width: 1,
+                        height: 20,
+                        color: Colors.white,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.attach_file, color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                        onPressed: () {
+                          // TODO: Implementar adjuntar archivo
+                        },
+                      ),
+                    ],
                   ),
-                  filled: true,
-                  fillColor: const Color.fromARGB(255, 232, 232, 236),
-                  hintText: 'Detalle (opcional)',
-                  hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                 ),
-                style: const TextStyle(color: Colors.black),
-              ),
+              ],
             ),
-          ),
 
-          const SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
 
-          // Botón guardar alineado con los textfields
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
+            // Dropdown
+            _crearDropdownCuentas(),
+            const SizedBox(height: 15.0),
+
+            // Campo monto
+            Padding(
+              padding: const EdgeInsets.only(left: 10.0),
               child: SizedBox(
-                width: 130.0,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                width: 250.0,
+                child: TextField(
+                  controller: _montoController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
                     ),
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 232, 232, 236),
+                    hintText: 'Monto',
+                    hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   ),
-                  onPressed: _guardarIngreso,
-                  child: const Text('Guardar Ingreso', style: TextStyle(fontSize: 13)),
+                  style: const TextStyle(color: Colors.black),
                 ),
               ),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 15.0),
+
+            // Campo detalle
+            Padding(
+              padding: const EdgeInsets.only(left: 10.0),
+              child: SizedBox(
+                width: 250.0,
+                child: TextField(
+                  controller: _detalleController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: const Color.fromARGB(255, 232, 232, 236),
+                    hintText: 'Detalle (opcional)',
+                    hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  ),
+                  style: const TextStyle(color: Colors.black),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20.0),
+
+            // Botón guardar alineado con los textfields
+            Padding(
+              padding: const EdgeInsets.only(left: 10.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 130.0,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: _guardarIngreso,
+                    child: const Text('Guardar Ingreso', style: TextStyle(fontSize: 13)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-
+    );
+  }
 
   Widget _pieChartIngresos(Map<String, double> datos) {
     if (datos.isEmpty) {
