@@ -3,113 +3,468 @@ import 'package:marnager/src/pages/ahorros_page.dart';
 import 'package:marnager/src/pages/home_page.dart';
 import 'package:marnager/src/pages/ingresos_page.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import '../services/firebase_services.dart';
+import '../models/gasto.dart';
 
 class GastosPage extends StatefulWidget {
   const GastosPage({super.key});
 
-  
   @override
   State<GastosPage> createState() => _GastosPageState();
 }
 
 class _GastosPageState extends State<GastosPage> {
   String? _opcionSeleccionadaDropdown;
-    String? gastoSeleccionado;
-    String? cuentaSeleccionada;
+  String? gastoSeleccionado;
 
-    final List<String> _gastos = [
-      //ejemplos, esta lista debe obtenerse de una BD
-      'Personales',
-      'Invitaciones',
-      'Joyas',
-    ];
 
-    final List<String> _cuentas = [
-      //ejemplos, esta lista debe obtenerse de una BD
-      'Efectivo',
-      'Tarjeta de Credito',
-      'Cuenta Ahorro',
-    ];
+  // Controladores para los campos de texto
+  final TextEditingController _montoController = TextEditingController();
+  final TextEditingController _detalleController = TextEditingController();
+  final TextEditingController _fechaController = TextEditingController();
+  final TextEditingController _categoriaController = TextEditingController();
+  final TextEditingController _subcategoriaController = TextEditingController();
 
-   // Método para obtener el icono según la categoría/subcategoría
-  IconData _obtenerIcono(String categoria) {
-    switch (categoria.toLowerCase()) {
-      case 'comida':
-      case 'comidales':
-        return Icons.restaurant;
-      case 'vestimenta':
-      case 'ropa':
-        return Icons.checkroom;
-      case 'educacion':
-      case 'educación':
-        return Icons.menu_book;
-      case 'otros':
-      case 'docu':
-        return Icons.description;
-      case 'tienda':
-      case 'retail':
-        return Icons.store;
-      case 'educa':
-      case 'beca':
-        return Icons.school;
-      case 'invitaciones':
-        return Icons.card_giftcard;
-      case 'joyas':
-        return Icons.diamond;
-      default:
-        return Icons.attach_money;
-    }
+
+  // Fecha seleccionada
+  DateTime _fechaSeleccionada = DateTime.now();
+
+  // Instancia del servicio de Firebase
+  final FirebaseServices _firebaseServices = FirebaseServices.instance;
+
+  // Variables para almacenar datos de Firebase
+  List<Gasto> _gastosList = [];
+  List<String> _categorias = [];
+  List<String> _subcategoriasDisponibles = [];
+  bool _isLoading = true;
+  bool _mostrarCategorias = false;
+  bool _mostrarSubcategorias = false;
+
+
+  // Mes y año seleccionado
+  int _mesSeleccionado = DateTime.now().month;
+  int _anioSeleccionado = DateTime.now().year;
+
+  // Para el gráfico
+  String? _categoriaGraficoSeleccionada;
+  bool _vistaSubcategorias = false;
+
+  // Mapas de íconos
+  final Map<String, IconData> _iconosSubcategorias = {};
+  final Map<String, IconData> _iconosCategorias = {};
+
+
+  @override
+  void initState() {
+    super.initState();
+    _inicializar();
   }
-  
-  // Datos estructurados con categorías y subcategorías
-  final List<Map<String, dynamic>> datosCompletos = [
-    { 'categoria': 'Personales', 'subcategoria': 'Comida', 'monto': 5000 },
-    { 'categoria': 'Personales', 'subcategoria': 'Educacion', 'monto': 3000 },
-    { 'categoria': 'Personales', 'subcategoria': 'Vestimenta', 'monto': 8000 },
-    { 'categoria': 'Personales', 'subcategoria': 'Otros', 'monto': 5000 },
-    { 'categoria': 'Joyas', 'subcategoria': 'Tienda', 'monto': 3000 },
-    { 'categoria': 'Invitaciones', 'subcategoria': 'Educación', 'monto': 2000 },
-  ];
 
-// Método para obtener subcategorías según la selección del dropdown
-  Map<String, double> _obtenerDatosParaGrafico() {
-    if (_opcionSeleccionadaDropdown == null) {
-      // Si no hay selección, mostrar todas las categorías principales
-      Map<String, double> categoriasPrincipales = {};
-      for (var categoria in _gastos) {
-        double total = datosCompletos
-            .where((item) => item['categoria'] == categoria)
-            .fold(0.0, (sum, item) => sum + item['monto']);
-        if (total > 0) {
-          categoriasPrincipales[categoria] = total;
-        }
-      }
-      return categoriasPrincipales;
-    } else {
-      // Si hay una categoría seleccionada, mostrar sus subcategorías
-      Map<String, double> subcategorias = {};
-      var datosCategoria = datosCompletos
-          .where((item) => item['categoria'] == _opcionSeleccionadaDropdown)
-          .toList();
+  Future<void> _inicializar() async {
+    await initializeDateFormatting('es_ES', null);
+    _cargarDatosFirebase();
+    _fechaController.text = DateFormat('dd/MM/yyyy').format(_fechaSeleccionada);
+  }
+
+  @override
+  void dispose() {
+    _montoController.dispose();
+    _detalleController.dispose();
+    _fechaController.dispose();
+    _categoriaController.dispose();
+    _subcategoriaController.dispose();
+    super.dispose();
+  }
+
+  // Cargar datos desde Firebase
+  Future<void> _cargarDatosFirebase() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final gastos = await _firebaseServices.getAllGastos();
       
-      for (var item in datosCategoria) {
-        subcategorias[item['subcategoria']] = item['monto'].toDouble();
+      final categoriasSet = gastos.map((g) => g.categoria).toSet();
+      final categoriasList = categoriasSet.toList();
+
+      final gastosDelMes = await _firebaseServices.getGastosByMonth(_mesSeleccionado, _anioSeleccionado);
+
+      // Asignar íconos
+      for (var gasto in gastos) {
+        if (!_iconosSubcategorias.containsKey(gasto.subcategoria)) {
+          _iconosSubcategorias[gasto.subcategoria] = _asignarIcono(gasto.subcategoria);
+        }
+        if (!_iconosCategorias.containsKey(gasto.categoria)) {
+          _iconosCategorias[gasto.categoria] = _asignarIconoCategoria(gasto.categoria);
+        }
+        
       }
-      return subcategorias;
+
+      setState(() {
+        // Asegurar que siempre sea una lista válida
+        _gastosList = gastosDelMes ?? [];
+        _categorias = categoriasList;
+       
+        _isLoading = false;
+      });
+    } catch (e) {
+   
+      setState(() {
+        // Inicializar con listas vacías en caso de error
+        _gastosList = [];
+        _categorias = [];
+      
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar datos: $e')),
+        );
+      }
     }
   }
+
+  // Actualizar subcategorías disponibles
+  Future<void> _actualizarSubcategorias(String categoria) async {
+    final todosLosGastos = await _firebaseServices.getAllGastos();
+    
+    final subcategorias = todosLosGastos
+        .where((g) => g.categoria == categoria)
+        .map((g) => g.subcategoria)
+        .toSet()
+        .toList();
+
+    setState(() {
+      _subcategoriasDisponibles = subcategorias;
+    });
+  }
+
+  // Asignar icono para categorías
+  IconData _asignarIconoCategoria(String categoria) {
+    final categoriaLower = categoria.toLowerCase();
+    
+    if (categoriaLower.contains('personal') || categoriaLower.contains('compras')) {
+      return Icons.shopping_bag;
+    } else if (categoriaLower.contains('comida') || categoriaLower.contains('alimentación')) {
+      return Icons.restaurant;
+    } else if (categoriaLower.contains('transporte') || categoriaLower.contains('auto')) {
+      return Icons.directions_car;
+    } else if (categoriaLower.contains('salud') || categoriaLower.contains('médico')) {
+      return Icons.local_hospital;
+    } else if (categoriaLower.contains('educación') || categoriaLower.contains('estudio')) {
+      return Icons.school;
+    } else if (categoriaLower.contains('entretenimiento') || categoriaLower.contains('ocio')) {
+      return Icons.movie;
+    } else if (categoriaLower.contains('servicio') || categoriaLower.contains('factura')) {
+      return Icons.receipt_long;
+    } else if (categoriaLower.contains('hogar') || categoriaLower.contains('casa')) {
+      return Icons.home;
+    } else if (categoriaLower.contains('invitación') || categoriaLower.contains('regalo')) {
+      return Icons.card_giftcard;
+    } else if (categoriaLower.contains('joya') || categoriaLower.contains('joyería')) {
+      return Icons.diamond;
+    } else {
+      return Icons.attach_money;
+    }
+  }
+
+  // Asignar icono para subcategorías
+  IconData _asignarIcono(String subcategoria) {
+    final subcategoriaLower = subcategoria.toLowerCase();
+    
+    if (subcategoriaLower.contains('comida') || subcategoriaLower.contains('alimento')) {
+      return Icons.restaurant;
+    } else if (subcategoriaLower.contains('ropa') || subcategoriaLower.contains('vestimenta')) {
+      return Icons.checkroom;
+    } else if (subcategoriaLower.contains('educación') || subcategoriaLower.contains('libro')) {
+      return Icons.menu_book;
+    } else if (subcategoriaLower.contains('transporte') || subcategoriaLower.contains('combustible')) {
+      return Icons.local_gas_station;
+    } else if (subcategoriaLower.contains('entretenimiento') || subcategoriaLower.contains('cine')) {
+      return Icons.movie;
+    } else if (subcategoriaLower.contains('salud') || subcategoriaLower.contains('farmacia')) {
+      return Icons.medication;
+    } else if (subcategoriaLower.contains('servicio') || subcategoriaLower.contains('luz') || subcategoriaLower.contains('agua')) {
+      return Icons.lightbulb;
+    } else if (subcategoriaLower.contains('internet') || subcategoriaLower.contains('teléfono')) {
+      return Icons.wifi;
+    } else if (subcategoriaLower.contains('streaming') || subcategoriaLower.contains('suscripción')) {
+      return Icons.subscriptions;
+    } else if (subcategoriaLower.contains('gimnasio') || subcategoriaLower.contains('deporte')) {
+      return Icons.fitness_center;
+    } else if (subcategoriaLower.contains('mascota') || subcategoriaLower.contains('veterinario')) {
+      return Icons.pets;
+    } else {
+      return Icons.shopping_cart;
+    }
+  }
+
+  
+
+  // Mostrar selector de fecha
+  Future<void> _seleccionarFecha() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _fechaSeleccionada,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      locale: const Locale('es', 'ES'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color.fromARGB(255, 61, 56, 245),
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _fechaSeleccionada) {
+      setState(() {
+        _fechaSeleccionada = picked;
+        _fechaController.text = DateFormat('dd/MM/yyyy').format(picked);
+      });
+    }
+  }
+
+  // Seleccionar categoría
+  void _seleccionarCategoria(String categoria) {
+    setState(() {
+      _categoriaController.text = categoria;
+      _opcionSeleccionadaDropdown = categoria;
+      _mostrarCategorias = false;
+      _subcategoriaController.clear();
+    });
+    _actualizarSubcategorias(categoria);
+  }
+
+  // Seleccionar subcategoría
+  void _seleccionarSubcategoria(String subcategoria) {
+    setState(() {
+      _subcategoriaController.text = subcategoria;
+      gastoSeleccionado = subcategoria;
+      _mostrarSubcategorias = false;
+    });
+  }
+
+ 
+
+  // Guardar gasto
+  Future<void> _guardarGasto() async {
+    if (_categoriaController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese o seleccione una categoría'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_subcategoriaController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese o seleccione una subcategoría'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_montoController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingrese el monto'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_fechaController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seleccione una fecha'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final monto = double.parse(_montoController.text);
+      final detalle = _detalleController.text.trim();
+      final categoria = _categoriaController.text.trim();
+      final subcategoria = _subcategoriaController.text.trim();
+      
+      
+      if (!_iconosSubcategorias.containsKey(subcategoria)) {
+        _iconosSubcategorias[subcategoria] = _asignarIcono(subcategoria);
+      }
+      
+      if (!_iconosCategorias.containsKey(categoria)) {
+        _iconosCategorias[categoria] = _asignarIconoCategoria(categoria);
+      }
+
+
+      final nuevoGasto = Gasto(
+        id: '',
+        categoria: categoria,
+        subcategoria: subcategoria,
+        monto: monto,
+        fecha: _fechaSeleccionada,
+        detalle: detalle.isNotEmpty ? detalle : null,
+        
+      );
+
+      await _firebaseServices.insertGasto(nuevoGasto);
+
+      setState(() {
+        _opcionSeleccionadaDropdown = null;
+        gastoSeleccionado = null;
+        _montoController.clear();
+        _detalleController.clear();
+        _categoriaController.clear();
+        _subcategoriaController.clear();
+        _fechaSeleccionada = DateTime.now();
+        _fechaController.text = DateFormat('dd/MM/yyyy').format(_fechaSeleccionada);
+        _subcategoriasDisponibles = [];
+      });
+
+      await _cargarDatosFirebase();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gasto guardado exitosamente'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } on FormatException {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('El monto debe ser un número válido'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Obtener icono
+  IconData _obtenerIcono(String nombre) {
+    return _iconosCategorias[nombre] ?? 
+           _iconosSubcategorias[nombre] ?? 
+           Icons.attach_money;
+  }
+
+  // Obtener datos para gráfico
+  Map<String, double> _obtenerDatosParaGrafico() {
+    // Validar que la lista no sea null
+    if (_gastosList.isEmpty) {
+      return {};
+    }
+
+    if (_vistaSubcategorias && _categoriaGraficoSeleccionada != null) {
+      Map<String, double> subcategorias = {};
+      
+      try {
+        var gastosFiltrados = _gastosList
+            .where((gasto) => gasto.categoria == _categoriaGraficoSeleccionada)
+            .toList();
+        
+        for (var gasto in gastosFiltrados) {
+          subcategorias[gasto.subcategoria] = 
+              (subcategorias[gasto.subcategoria] ?? 0.0) + gasto.monto;
+        }
+      } catch (e) {
+        
+        return {};
+      }
+      
+      return subcategorias;
+    } else {
+      Map<String, double> categoriasPrincipales = {};
+      
+      try {
+        for (var gasto in _gastosList) {
+          categoriasPrincipales[gasto.categoria] = 
+              (categoriasPrincipales[gasto.categoria] ?? 0.0) + gasto.monto;
+        }
+      } catch (e) {
+        
+        return {};
+      }
+      
+      return categoriasPrincipales;
+    }
+  }
+
+  // Cambiar mes
+  void _cambiarMes(int delta) {
+    setState(() {
+      _mesSeleccionado += delta;
+      if (_mesSeleccionado > 12) {
+        _mesSeleccionado = 1;
+        _anioSeleccionado++;
+      } else if (_mesSeleccionado < 1) {
+        _mesSeleccionado = 12;
+        _anioSeleccionado--;
+      }
+    });
+    _cargarDatosFirebase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Obtener datos dinámicos según la selección
-    final datosDinamicos = _obtenerDatosParaGrafico();
+    // Agregar validación antes de obtener datos
+    final datosDinamicos = _isLoading ? <String, double>{} : _obtenerDatosParaGrafico();
+    
     return Scaffold(
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Gastos',style: TextStyle(color: Colors.white),),
+        title: const Text('Gastos', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _cargarDatosFirebase,
+            tooltip: 'Recargar datos',
+          ),
+        ],
       ),
-       body: ListView(padding: const EdgeInsets.all(8.0), children: [_cardCategoriaGasto(), _cardCargaGasto(),_cardGrafico(datosDinamicos)],),
-       bottomNavigationBar: BottomNavigationBar(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _cargarDatosFirebase,
+              child: ListView(
+                padding: const EdgeInsets.all(10.0),
+                children: [
+                  _cardCargaGasto(),
+                  _cardGrafico(datosDinamicos),
+                ],
+              ),
+            ),
+      bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: 1,
         selectedItemColor: const Color.fromARGB(255, 61, 56, 245),
@@ -121,31 +476,28 @@ class _GastosPageState extends State<GastosPage> {
           color: Color.fromARGB(255, 61, 56, 245),
         ),
         onTap: (index) {
-
-          // Navegación basada en el índice seleccionado
           switch (index) {
             case 0:
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => IngresosPage()),
+                MaterialPageRoute(builder: (context) => const IngresosPage()),
               );
               break;
             case 1:
-              //ya estamos en gastos
               break;
             case 2:
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => HomePage()));
-              break;
-            case 3:
-              // Navegar a página de Ahorros
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AhorrosPage()),
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AhorrosPage()),
               );
               break;
             case 4:
-              // Navegar a página de Más opciones
               break;
           }
         },
@@ -166,132 +518,246 @@ class _GastosPageState extends State<GastosPage> {
     );
   }
 
-  Widget _cardCategoriaGasto(){
-    return Card(
-      elevation: 8.0,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Categoria de gasto'),
-            const SizedBox(height: 15.0),
-            _crearDropdown(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<DropdownMenuItem<String>> getOpcionesDropdown() {
-    List<DropdownMenuItem<String>> lista = [];
-    for (var gasto in _gastos) {
-      lista.add(
-        DropdownMenuItem(
-          value: gasto,
-          child: Text(
-            gasto,
-            style: const TextStyle(color: Colors.white), // Texto blanco en cada opción
+  Widget _crearCampoCategoria() {
+    return Column(
+      children: [
+        TextField(
+          controller: _categoriaController,
+          onChanged: (value) {
+            if (value.isEmpty) {
+              setState(() {
+                _mostrarCategorias = false;
+              });
+            }
+            setState(() {
+              _opcionSeleccionadaDropdown = value.isNotEmpty ? value : null;
+            });
+          },
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30.0),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: const Color.fromARGB(255, 232, 232, 236),
+            hintText: 'Escribe o selecciona categoría',
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14.0),
+            prefixIcon: const Icon(Icons.list_alt_rounded, 
+                color: Color.fromARGB(255, 61, 56, 245)),
+            suffixIcon: _categorias.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      _mostrarCategorias ? Icons.expand_less : Icons.expand_more,
+                      color: const Color.fromARGB(255, 61, 56, 245),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mostrarCategorias = !_mostrarCategorias;
+                      });
+                    },
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 12.0),
           ),
+          style: const TextStyle(color: Colors.black),
         ),
-      );
-    }
-    return lista;
-  }
-
-
-  Widget _crearDropdown() {
-    return Row(
-      children: <Widget>[
-        const SizedBox(width: 10.0),
-        Container(
-          width: 200.0,
-          height: 40.0,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0.0),
-          decoration: BoxDecoration(
-            color: Color.fromARGB(255, 61, 56, 245), // Color de fondo
-            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton(
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              value: _opcionSeleccionadaDropdown,
-              hint: const Text(
-                'Seleccione',
-                style: TextStyle(color: Colors.white),
-              ),
-              isExpanded: true,
-              style: const TextStyle(
-                color: Colors.white,
-              ), // Color del texto seleccionado
-              dropdownColor: const Color.fromARGB(255,61,56,245,), // Color de fondo del menú desplegable
-              items: getOpcionesDropdown(),
-              onChanged: (opt) {
-                setState(() {
-                  _opcionSeleccionadaDropdown = opt; // No uses .toString(), usa el valor directamente
-                });
-              },
+        
+        if (_mostrarCategorias && _categorias.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    'Categorías guardadas:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _categorias.map((categoria) {
+                    final icono = _iconosCategorias[categoria] ?? Icons.folder;
+                    return GestureDetector(
+                      onTap: () => _seleccionarCategoria(categoria),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 61, 56, 245),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icono,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              categoria,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
-        ),
       ],
     );
   }
 
-  List<DropdownMenuItem<String>> getOpcionesCuentasDropdown() {
-    List<DropdownMenuItem<String>> lista = [];
-    for (var cuenta in _cuentas) {
-      lista.add(
-        DropdownMenuItem(
-          value: cuenta,
-          child: Text(
-            cuenta,
-            style: const TextStyle(color: Colors.black), // Texto blanco en cada opción
+  Widget _crearCampoSubcategoria() {
+    return Column(
+      children: [
+        TextField(
+          controller: _subcategoriaController,
+          onChanged: (value) {
+            if (value.isEmpty) {
+              setState(() {
+                _mostrarSubcategorias = false;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30.0),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: const Color.fromARGB(255, 232, 232, 236),
+            hintText: 'Escribe o selecciona subcategoría',
+            hintStyle: const TextStyle(color: Colors.grey, fontSize: 14.0),
+            prefixIcon: const Icon(Icons.category, 
+                color: Color.fromARGB(255, 61, 56, 245)),
+            suffixIcon: _subcategoriasDisponibles.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      _mostrarSubcategorias ? Icons.expand_less : Icons.expand_more,
+                      color: const Color.fromARGB(255, 61, 56, 245),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mostrarSubcategorias = !_mostrarSubcategorias;
+                      });
+                    },
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 12.0),
           ),
+          style: const TextStyle(color: Colors.black),
         ),
-      );
-    }
-    return lista;
-  }
-
-  Widget _crearDropdownCuentas() {
-    return Row(
-      children: <Widget>[
-        const SizedBox(width: 10.0),
-        Container(
-          width: 250.0,
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-          decoration: BoxDecoration(
-            color: Color.fromARGB(255, 232, 232, 236), // Color de fondo
-            borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton(
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-              value: cuentaSeleccionada,
-              hint: const Text(
-                'Cuenta',
-                style: TextStyle(color: Colors.black),
-              ),
-              isExpanded: true,
-              style: const TextStyle(
-                color: Colors.black,
-              ), // Color del texto seleccionado
-              dropdownColor: const Color.fromARGB(255, 61, 56, 245), // Color de fondo del menú desplegable
-              items: getOpcionesCuentasDropdown(),
-              onChanged: (opt) {
-                setState(() {
-                  cuentaSeleccionada = opt;
-                });
-              },
+        
+        if (_mostrarSubcategorias && _subcategoriasDisponibles.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    'Subcategorías guardadas:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _subcategoriasDisponibles.map((subcategoria) {
+                    final icono = _iconosSubcategorias[subcategoria] ?? Icons.work_outline;
+                    return GestureDetector(
+                      onTap: () => _seleccionarSubcategoria(subcategoria),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 61, 56, 245),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icono,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              subcategoria,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _cardCargaGasto(){
+ 
+
+  Widget _cardCargaGasto() {
     return Card(
       elevation: 8.0,
       child: Padding(
@@ -299,107 +765,163 @@ class _GastosPageState extends State<GastosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text('Carga de datos'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                      foregroundColor: Colors.white,
-                      shape: const CircleBorder(),
-                      
-                      padding: const EdgeInsets.all(8), // Reducido de 12 a 8
-                      elevation: 5,
-                      shadowColor: Colors.grey,
-                    ),
-                    onPressed: () {
-                      
-                    }, 
-                    child: const Icon(Icons.camera_alt, size: 18), // Icono más pequeño
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text(
+                  'Nuevo Gasto',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(95, 200, 200, 206),
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-                      foregroundColor: Colors.white,
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(0), // Reducido de 12 a 8
-                      elevation: 5,
-                      shadowColor: Colors.grey,
-                    ),
-                    onPressed: () {
-                      
-                    }, 
-                    child: const Icon(Icons.attach_file, size: 18), // Icono más pequeño
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.camera_alt, 
+                            color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Funcionalidad en desarrollo')),
+                          );
+                        },
+                      ),
+                      Container(width: 1, height: 20, color: Colors.white),
+                      IconButton(
+                        icon: const Icon(Icons.attach_file, 
+                            color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Funcionalidad en desarrollo')),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20.0),
+
+            _crearCampoCategoria(),
+            const SizedBox(height: 15.0),
+
+            _crearCampoSubcategoria(),
+            const SizedBox(height: 15.0),
+
+
+            TextField(
+              controller: _fechaController,
+              readOnly: true,
+              onTap: _seleccionarFecha,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: const Color.fromARGB(255, 232, 232, 236),
+                hintText: 'Fecha',
+                hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
+                prefixIcon: const Icon(Icons.calendar_today, 
+                    color: Color.fromARGB(255, 61, 56, 245)),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+
+            const SizedBox(height: 15.0),
+
+            TextField(
+              controller: _montoController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: const Color.fromARGB(255, 232, 232, 236),
+                hintText: 'Monto',
+                hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
+                prefixIcon: const Icon(Icons.attach_money, 
+                    color: Color.fromARGB(255, 61, 56, 245)),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+
+            const SizedBox(height: 15.0),
+
+            TextField(
+              controller: _detalleController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: const Color.fromARGB(255, 232, 232, 236),
+                hintText: 'Detalle (opcional)',
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 14.0),
+                prefixIcon: const Icon(Icons.notes, 
+                    color: Color.fromARGB(255, 61, 56, 245)),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+
+            const SizedBox(height: 20.0),
+
+            SizedBox(
+              width: 100,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 61, 56, 245),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                onPressed: _guardarGasto,
+                child: const Text('Guardar', 
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pieChartGastos(Map<String, double> datos) {
+    if (datos.isEmpty) {
+      return const SizedBox(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.pie_chart_outline, size: 60, color: Colors.grey),
+              SizedBox(height: 10),
+              Text(
+                'No hay gastos registrados',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
           ),
-          const SizedBox(height: 15.0),
-          _crearDropdownCuentas(),
-          const SizedBox(height: 15.0),
-          Container(
-            width: 250.0,
-          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
-          child: TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30.0),
-                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
-              ),
-              filled: true,
-              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
-              hintText: 'Monto',
-              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
-            ),
-            style: const TextStyle(color: Colors.black),
-          ),
         ),
-        const SizedBox(height: 15.0),
-        // TextField con el mismo estilo que el dropdown
-        Container(
-          width: 250.0,
-          margin: const EdgeInsets.only(left: 10.0), // Mismo margen que el dropdown
-          child: TextField(
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30.0),
-                borderSide: BorderSide.none, // Sin borde para que coincida con el dropdown
-              ),
-              filled: true,
-              
-              fillColor: const Color.fromARGB(255, 232, 232, 236), // Mismo color que el dropdown
-              hintText: 'Detalle (opcional)',
-              hintStyle: const TextStyle(color: Colors.black,fontSize: 14.0),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Mismo padding que el dropdown
-            ),
-            style: const TextStyle(color: Colors.black),
-          ),
-        ),
-      ],
-    ),
-  ));
-}
-
- // Método específico para gráfico de categorías de gastos
-  Widget _pieChartGastos(Map<String, double> datos) {
-    // Si no hay datos, mostrar placeholder
-    if (datos.isEmpty) {
-      return const SizedBox(
-        height: 160,
-        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
       );
     }
 
-    // Colores para las diferentes categorías
     final List<Color> colores = [
       const Color(0xff0293ee),
       const Color(0xfff8b250),
@@ -407,9 +929,10 @@ class _GastosPageState extends State<GastosPage> {
       const Color(0xff13d38e),
       const Color(0xffff6b6b),
       const Color(0xff4ecdc4),
+      const Color(0xffff9800),
+      const Color(0xff9c27b0),
     ];
 
-    // Calcular el total para los porcentajes
     final double total = datos.values.reduce((a, b) => a + b);
 
     return SizedBox(
@@ -428,9 +951,9 @@ class _GastosPageState extends State<GastosPage> {
               radius: 40,
               showTitle: true,
               titleStyle: const TextStyle(
-                color: Colors.white, 
-                fontSize: 12, 
-                fontWeight: FontWeight.bold
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
               borderSide: BorderSide.none,
               titlePositionPercentageOffset: 0.5,
@@ -441,12 +964,8 @@ class _GastosPageState extends State<GastosPage> {
     );
   }
 
-  
   Widget _cardGrafico(Map<String, double> datos) {
-    // Título dinámico según la selección
-    String titulo = _opcionSeleccionadaDropdown == null 
-        ? 'Resumen por Categorías' 
-        : 'Subcategorías de $_opcionSeleccionadaDropdown';
+    final nombreMes = DateFormat('MMMM yyyy', 'es_ES').format(DateTime(_anioSeleccionado, _mesSeleccionado));
     
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -457,29 +976,93 @@ class _GastosPageState extends State<GastosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              titulo,
-              style: const TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.normal,
-                color: Color.fromARGB(255, 25, 25, 26),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 20),
+                  onPressed: () => _cambiarMes(-1),
+                  color: const Color.fromARGB(255, 61, 56, 245),
+                ),
+                Text(
+                  nombreMes.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 61, 56, 245),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                  onPressed: () => _cambiarMes(1),
+                  color: const Color.fromARGB(255, 61, 56, 245),
+                ),
+              ],
             ),
+            
+            const Divider(),
+            
+            if (!_vistaSubcategorias)
+              Row(
+                children: [
+                  const Icon(Icons.pie_chart, 
+                      color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Resumen por Categorías',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 25, 25, 26),
+                    ),
+                  ),
+                ],
+              ),
+            
+            if (_vistaSubcategorias && _categoriaGraficoSeleccionada != null)
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _vistaSubcategorias = false;
+                        _categoriaGraficoSeleccionada = null;
+                      });
+                    },
+                    color: const Color.fromARGB(255, 61, 56, 245),
+                  ),
+                  Icon(
+                    _obtenerIcono(_categoriaGraficoSeleccionada!),
+                    color: const Color.fromARGB(255, 61, 56, 245),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Subcategorías de $_categoriaGraficoSeleccionada',
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 25, 25, 26),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            
             const SizedBox(height: 10),
-            // Usa el método específico para ingresos
             _pieChartGastos(datos),
             const SizedBox(height: 10),
-            // Opcional: mostrar leyenda
-            _leyendaGastos(datos),
+            if (datos.isNotEmpty) _leyendaGastos(datos),
           ],
         ),
       ),
     );
   }
 
-  // leyenda para identificar las categorías
   Widget _leyendaGastos(Map<String, double> datos) {
-    // Colores que coinciden con el gráfico
     final List<Color> colores = [
       const Color(0xff0293ee),
       const Color(0xfff8b250),
@@ -487,40 +1070,94 @@ class _GastosPageState extends State<GastosPage> {
       const Color(0xff13d38e),
       const Color(0xffff6b6b),
       const Color(0xff4ecdc4),
+      const Color(0xffff9800),
+      const Color(0xff9c27b0),
     ];
 
+    final double total = datos.values.reduce((a, b) => a + b);
+
     return Column(
-      children: datos.entries.map((entry) {
-        int index = datos.keys.toList().indexOf(entry.key);
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6.0),
-          child: Row(
-            children: [
-             
-              const SizedBox(width: 10),
-              // Icono específico para cada categoría
-              Icon(
-                _obtenerIcono(entry.key),
-                color: colores[index % colores.length],
-                size: 24,
-              ),
-              const SizedBox(width: 10),
-              // Nombre de la categoría y monto
-              Expanded(
-                child: Text(
-                  '${entry.key}: \$${entry.value.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color.fromARGB(255, 21, 21, 21),
+      children: [
+        const Divider(),
+        ...datos.entries.map((entry) {
+          int index = datos.keys.toList().indexOf(entry.key);
+          double porcentaje = (entry.value / total) * 100;
+          return InkWell(
+            onTap: !_vistaSubcategorias ? () {
+              setState(() {
+                _categoriaGraficoSeleccionada = entry.key;
+                _vistaSubcategorias = true;
+              });
+            } : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  const SizedBox(width: 10),
+                  Icon(
+                    _obtenerIcono(entry.key),
+                    color: colores[index % colores.length],
+                    size: 28,
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Color.fromARGB(255, 21, 21, 21),
+                          ),
+                        ),
+                        Text(
+                          '\$${entry.value.toStringAsFixed(2)} (${porcentaje.toStringAsFixed(1)}%)',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!_vistaSubcategorias)
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
+        const Divider(),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Total:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                '\$${total.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 61, 56, 245),
                 ),
               ),
             ],
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 }
