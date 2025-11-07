@@ -195,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                     fillColor: Colors.white,
                     helperText: 'Ej: usuario123 o email@ejemplo.com',
-                    helperStyle: TextStyle(fontSize: 11),
+                    helperStyle: TextStyle(fontSize: 11, color: Color.fromARGB(214, 226, 223, 223)),
                   ),
                   style: const TextStyle(color: Colors.black),
                 ),
