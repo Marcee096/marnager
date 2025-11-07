@@ -23,6 +23,7 @@ class _IngresosPageState extends State<IngresosPage> {
   final TextEditingController _montoController = TextEditingController();
   final TextEditingController _detalleController = TextEditingController();
   final TextEditingController _fechaController = TextEditingController();
+  final TextEditingController _categoriaController = TextEditingController();
   final TextEditingController _subcategoriaController = TextEditingController();
 
   // Fecha seleccionada
@@ -36,14 +37,20 @@ class _IngresosPageState extends State<IngresosPage> {
   List<String> _categorias = [];
   List<String> _subcategoriasDisponibles = [];
   bool _isLoading = true;
+  bool _mostrarCategorias = false;
   bool _mostrarSubcategorias = false;
 
   // Mes y año actual
-  final _mesActual = DateTime.now().month;
-  final _anioActual = DateTime.now().year;
+  int _mesSeleccionado = DateTime.now().month;
+  int _anioSeleccionado = DateTime.now().year;
+
+  // Para el gráfico
+  String? _categoriaGraficoSeleccionada;
+  bool _vistaSubcategorias = false;
 
   // Mapa de íconos para subcategorías
   final Map<String, IconData> _iconosSubcategorias = {};
+  final Map<String, IconData> _iconosCategorias = {};
 
   @override
   void initState() {
@@ -68,6 +75,7 @@ class _IngresosPageState extends State<IngresosPage> {
     _montoController.dispose();
     _detalleController.dispose();
     _fechaController.dispose();
+    _categoriaController.dispose();
     _subcategoriaController.dispose();
     super.dispose();
   }
@@ -87,12 +95,15 @@ class _IngresosPageState extends State<IngresosPage> {
       final categoriasList = categoriasSet.toList();
 
       // Obtener ingresos del mes actual para el gráfico
-      final ingresosDelMes = await _firebaseServices.getIngresosByMonth(_mesActual, _anioActual);
+      final ingresosDelMes = await _firebaseServices.getIngresosByMonth(_mesSeleccionado, _anioSeleccionado);
 
       // Asignar íconos a todas las subcategorías existentes
       for (var ingreso in ingresos) {
         if (!_iconosSubcategorias.containsKey(ingreso.subcategoria)) {
           _iconosSubcategorias[ingreso.subcategoria] = _asignarIcono(ingreso.subcategoria);
+        }
+        if (!_iconosCategorias.containsKey(ingreso.categoria)) {
+          _iconosCategorias[ingreso.categoria] = _asignarIconoCategoria(ingreso.categoria);
         }
       }
 
@@ -115,26 +126,48 @@ class _IngresosPageState extends State<IngresosPage> {
 
   // Actualizar subcategorías disponibles cuando se selecciona una categoría
   Future<void> _actualizarSubcategorias(String categoria) async {
-   
-      final todosLosIngresos = await _firebaseServices.getAllIngresos();
-      
-      final subcategorias = todosLosIngresos
-          .where((i) => i.categoria == categoria)
-          .map((i) => i.subcategoria)
-          .toSet()
-          .toList();
-
-      setState(() {
-        _subcategoriasDisponibles = subcategorias;
-      });
+    final todosLosIngresos = await _firebaseServices.getAllIngresos();
     
+    final subcategorias = todosLosIngresos
+        .where((i) => i.categoria == categoria)
+        .map((i) => i.subcategoria)
+        .toSet()
+        .toList();
+
+    setState(() {
+      _subcategoriasDisponibles = subcategorias;
+    });
   }
 
-  // Asignar icono automáticamente basado en palabras clave
+  // Asignar icono automáticamente para categorías
+  IconData _asignarIconoCategoria(String categoria) {
+    final categoriaLower = categoria.toLowerCase();
+    
+    if (categoriaLower.contains('freelance') || categoriaLower.contains('trabajo')) {
+      return Icons.computer;
+    } else if (categoriaLower.contains('retail') || categoriaLower.contains('tienda')) {
+      return Icons.store;
+    } else if (categoriaLower.contains('educación') || categoriaLower.contains('ayudantía')) {
+      return Icons.school;
+    } else if (categoriaLower.contains('evento')) {
+      return Icons.event;
+    } else if (categoriaLower.contains('joya') || categoriaLower.contains('joyería')) {
+      return Icons.diamond;
+    } else if (categoriaLower.contains('consulta') || categoriaLower.contains('asesoría')) {
+      return Icons.support_agent;
+    } else if (categoriaLower.contains('inversión') || categoriaLower.contains('dividendo')) {
+      return Icons.trending_up;
+    } else if (categoriaLower.contains('regalo') || categoriaLower.contains('donación')) {
+      return Icons.card_giftcard;
+    } else {
+      return Icons.attach_money;
+    }
+  }
+
+  // Asignar icono automáticamente basado en palabras clave para subcategorías
   IconData _asignarIcono(String subcategoria) {
     final subcategoriaLower = subcategoria.toLowerCase();
     
-    // Palabras clave para diferentes categorías
     if (subcategoriaLower.contains('web') || subcategoriaLower.contains('página')) {
       return Icons.web;
     } else if (subcategoriaLower.contains('diseño') || subcategoriaLower.contains('gráfico') || subcategoriaLower.contains('imagen')) {
@@ -145,6 +178,10 @@ class _IngresosPageState extends State<IngresosPage> {
       return Icons.picture_as_pdf;
     } else if (subcategoriaLower.contains('tienda') || subcategoriaLower.contains('retail') || subcategoriaLower.contains('venta')) {
       return Icons.store;
+    } else if (subcategoriaLower.contains('poo') || subcategoriaLower.contains('programación')) {
+      return Icons.code;
+    } else if (subcategoriaLower.contains('instituto') || subcategoriaLower.contains('universidad')) {
+      return Icons.business;
     } else if (subcategoriaLower.contains('educación') || subcategoriaLower.contains('beca') || subcategoriaLower.contains('curso')) {
       return Icons.school;
     } else if (subcategoriaLower.contains('invitación') || subcategoriaLower.contains('evento')) {
@@ -202,6 +239,17 @@ class _IngresosPageState extends State<IngresosPage> {
     }
   }
 
+  // Seleccionar una categoría existente
+  void _seleccionarCategoria(String categoria) {
+    setState(() {
+      _categoriaController.text = categoria;
+      _opcionSeleccionadaDropdown = categoria;
+      _mostrarCategorias = false;
+      _subcategoriaController.clear();
+    });
+    _actualizarSubcategorias(categoria);
+  }
+
   // Seleccionar una subcategoría existente
   void _seleccionarSubcategoria(String subcategoria) {
     setState(() {
@@ -214,10 +262,10 @@ class _IngresosPageState extends State<IngresosPage> {
   // Método para guardar un nuevo ingreso
   Future<void> _guardarIngreso() async {
     // Validar campos obligatorios
-    if (_opcionSeleccionadaDropdown == null) {
+    if (_categoriaController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Seleccione una categoría'),
+          content: Text('Ingrese o seleccione una categoría'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -257,24 +305,28 @@ class _IngresosPageState extends State<IngresosPage> {
     try {
       final monto = double.parse(_montoController.text);
       final detalle = _detalleController.text.trim();
+      final categoria = _categoriaController.text.trim();
       final subcategoria = _subcategoriaController.text.trim();
       
       // Si es una subcategoría nueva, asignarle un icono
       if (!_iconosSubcategorias.containsKey(subcategoria)) {
         _iconosSubcategorias[subcategoria] = _asignarIcono(subcategoria);
       }
+      
+      // Si es una categoría nueva, asignarle un icono
+      if (!_iconosCategorias.containsKey(categoria)) {
+        _iconosCategorias[categoria] = _asignarIconoCategoria(categoria);
+      }
 
       // Crear el objeto Ingreso
       final nuevoIngreso = Ingreso(
         id: '',
-        categoria: _opcionSeleccionadaDropdown!,
+        categoria: categoria,
         subcategoria: subcategoria,
         monto: monto,
         fecha: _fechaSeleccionada,
         detalle: detalle.isNotEmpty ? detalle : '',
       );
-
-      
 
       // Guardar en Firebase
       await _firebaseServices.insertIngreso(nuevoIngreso);
@@ -285,6 +337,7 @@ class _IngresosPageState extends State<IngresosPage> {
         ingresoSeleccionado = null;
         _montoController.clear();
         _detalleController.clear();
+        _categoriaController.clear();
         _subcategoriaController.clear();
         _fechaSeleccionada = DateTime.now();
         _fechaController.text = DateFormat('dd/MM/yyyy').format(_fechaSeleccionada);
@@ -325,35 +378,52 @@ class _IngresosPageState extends State<IngresosPage> {
   }
 
   // Método para obtener el icono según la categoría
-  IconData _obtenerIcono(String categoria) {
-    switch (categoria.toLowerCase()) {
-      case 'freelance':
-        return Icons.computer;
-      case 'retail':
-        return Icons.store;
-      case 'educación':
-        return Icons.school;
-      case 'eventos':
-        return Icons.event;
-      case 'joyería':
-        return Icons.diamond;
-      case 'otros':
-        return Icons.attach_money;
-      default:
-        return Icons.attach_money;
+  IconData _obtenerIcono(String nombre) {
+    return _iconosCategorias[nombre] ?? _iconosSubcategorias[nombre] ?? Icons.attach_money;
+  }
+
+  // Método para obtener datos del gráfico
+  Map<String, double> _obtenerDatosParaGrafico() {
+    if (_vistaSubcategorias && _categoriaGraficoSeleccionada != null) {
+      // Mostrar subcategorías de la categoría seleccionada
+      Map<String, double> subcategorias = {};
+      
+      var ingresosFiltrados = _ingresosList
+          .where((ingreso) => ingreso.categoria == _categoriaGraficoSeleccionada)
+          .toList();
+      
+      for (var ingreso in ingresosFiltrados) {
+        subcategorias[ingreso.subcategoria] = 
+            (subcategorias[ingreso.subcategoria] ?? 0.0) + ingreso.monto;
+      }
+      
+      return subcategorias;
+    } else {
+      // Mostrar categorías principales
+      Map<String, double> categoriasPrincipales = {};
+      
+      for (var ingreso in _ingresosList) {
+        categoriasPrincipales[ingreso.categoria] = 
+            (categoriasPrincipales[ingreso.categoria] ?? 0.0) + ingreso.monto;
+      }
+      
+      return categoriasPrincipales;
     }
   }
 
-  // Método para obtener datos del gráfico SOLO por categorías principales
-  Map<String, double> _obtenerDatosParaGrafico() {
-    Map<String, double> categoriasPrincipales = {};
-    
-    for (var ingreso in _ingresosList) {
-      categoriasPrincipales[ingreso.categoria] = 
-          (categoriasPrincipales[ingreso.categoria] ?? 0.0) + ingreso.monto;
-    }
-    
-    return categoriasPrincipales;
+  // Cambiar mes
+  void _cambiarMes(int delta) {
+    setState(() {
+      _mesSeleccionado += delta;
+      if (_mesSeleccionado > 12) {
+        _mesSeleccionado = 1;
+        _anioSeleccionado++;
+      } else if (_mesSeleccionado < 1) {
+        _mesSeleccionado = 12;
+        _anioSeleccionado--;
+      }
+    });
+    _cargarDatosFirebase();
   }
 
   @override
@@ -439,55 +509,125 @@ class _IngresosPageState extends State<IngresosPage> {
     );
   }
 
-  List<DropdownMenuItem<String>> getOpcionesDropdown() {
-    List<DropdownMenuItem<String>> lista = [];
-    for (var categoria in _categorias) {
-      lista.add(
-        DropdownMenuItem(
-          value: categoria,
-          child: Text(
-            categoria,
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-    }
-    return lista;
-  }
-
-  Widget _crearDropdown() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 0.0),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 61, 56, 245),
-        borderRadius: BorderRadius.circular(30.0),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton(
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-          value: _opcionSeleccionadaDropdown,
-          hint: const Text(
-            'Categoría',
-            style: TextStyle(color: Colors.white),
-          ),
-          isExpanded: true,
-          style: const TextStyle(color: Colors.white),
-          dropdownColor: const Color.fromARGB(255, 61, 56, 245),
-          items: getOpcionesDropdown(),
-          onChanged: (opt) {
-            setState(() {
-              _opcionSeleccionadaDropdown = opt;
-              ingresoSeleccionado = null;
-              _subcategoriaController.clear();
-              _mostrarSubcategorias = false;
-            });
-            if (opt != null) {
-              _actualizarSubcategorias(opt);
+  Widget _crearCampoCategoria() {
+    return Column(
+      children: [
+        TextField(
+          controller: _categoriaController,
+          onChanged: (value) {
+            if (value.isEmpty) {
+              setState(() {
+                _mostrarCategorias = false;
+              });
             }
+            setState(() {
+              _opcionSeleccionadaDropdown = value.isNotEmpty ? value : null;
+            });
           },
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30.0),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: const Color.fromARGB(255, 232, 232, 236),
+            hintText: 'Escribe o selecciona categoría',
+            hintStyle: const TextStyle(color: Color.fromARGB(214, 156, 154, 154), fontSize: 14.0),
+            prefixIcon: const Icon(Icons.list_alt_rounded, color: Color.fromARGB(255, 61, 56, 245)),
+            suffixIcon: _categorias.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      _mostrarCategorias ? Icons.expand_less : Icons.expand_more,
+                      color:  Color.fromARGB(255, 61, 56, 245),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mostrarCategorias = !_mostrarCategorias;
+                      });
+                    },
+                  )
+                : null,
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0, vertical: 12.0),
+          ),
+          style: const TextStyle(color: Color.fromARGB(255, 80, 78, 78)),
         ),
-      ),
+        
+        if (_mostrarCategorias && _categorias.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey,
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    'Categorías guardadas:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _categorias.map((categoria) {
+                    final icono = _iconosCategorias[categoria] ?? Icons.folder;
+                    return GestureDetector(
+                      onTap: () => _seleccionarCategoria(categoria),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 61, 56, 245),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color.fromARGB(255, 240, 240, 243),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icono,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              categoria,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -588,14 +728,14 @@ class _IngresosPageState extends State<IngresosPage> {
                             Icon(
                               icono,
                               size: 18,
-                              color: const Color.fromARGB(255, 251, 251, 252),
+                              color: Colors.white,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               subcategoria,
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Color.fromARGB(255, 241, 241, 243),
+                                color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -662,11 +802,11 @@ class _IngresosPageState extends State<IngresosPage> {
 
             const SizedBox(height: 20.0),
 
-            // Dropdown Categoría
-            _crearDropdown(),
+            // Campo categoría
+            _crearCampoCategoria(),
             const SizedBox(height: 15.0),
 
-            // Campo Subcategoría con selector
+            // Campo subcategoría
             _crearCampoSubcategoria(),
             const SizedBox(height: 15.0),
 
@@ -706,13 +846,13 @@ class _IngresosPageState extends State<IngresosPage> {
                 filled: true,
                 fillColor: const Color.fromARGB(255, 232, 232, 236),
                 hintText: 'Monto',
-                hintStyle: const TextStyle(color: Colors.black, fontSize: 14.0),
+                hintStyle: const TextStyle(color: Color.fromARGB(255, 129, 127, 127), fontSize: 14.0),
                 prefixIcon: const Icon(Icons.attach_money, 
                     color: Color.fromARGB(255, 61, 56, 245)),
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16.0, vertical: 12.0),
               ),
-              style: const TextStyle(color: Colors.black),
+              style: const TextStyle(color: Color.fromARGB(255, 25, 25, 25)),
             ),
 
             const SizedBox(height: 15.0),
@@ -742,7 +882,7 @@ class _IngresosPageState extends State<IngresosPage> {
 
             // Botón guardar
             SizedBox(
-              width: double.infinity,
+              width: 100,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 61, 56, 245),
@@ -753,8 +893,7 @@ class _IngresosPageState extends State<IngresosPage> {
                   ),
                 ),
                 onPressed: _guardarIngreso,
-                icon: const Icon(Icons.save),
-                label: const Text('Guardar Ingreso', 
+                label: const Text('Guardar', 
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
@@ -775,7 +914,7 @@ class _IngresosPageState extends State<IngresosPage> {
               Icon(Icons.pie_chart_outline, size: 60, color: Colors.grey),
               SizedBox(height: 10),
               Text(
-                'No hay ingresos registrados este mes',
+                'No hay ingresos registrados',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
@@ -791,6 +930,8 @@ class _IngresosPageState extends State<IngresosPage> {
       const Color(0xff13d38e),
       const Color(0xffff6b6b),
       const Color(0xff4ecdc4),
+      const Color(0xffff9800),
+      const Color(0xff9c27b0),
     ];
 
     final double total = datos.values.reduce((a, b) => a + b);
@@ -825,6 +966,8 @@ class _IngresosPageState extends State<IngresosPage> {
   }
 
   Widget _cardGrafico(Map<String, double> datos) {
+    final nombreMes = DateFormat('MMMM yyyy', 'es_ES').format(DateTime(_anioSeleccionado, _mesSeleccionado));
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -834,23 +977,84 @@ class _IngresosPageState extends State<IngresosPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Controles de navegación de mes
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.pie_chart, 
-                    color: Color.fromARGB(255, 61, 56, 245), size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Resumen por Categorías - ${DateFormat('MMMM yyyy', 'es_ES').format(DateTime.now())}',
-                    style: const TextStyle(
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 20),
+                  onPressed: () => _cambiarMes(-1),
+                  color: const Color.fromARGB(255, 61, 56, 245),
+                ),
+                Text(
+                  nombreMes.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 61, 56, 245),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                  onPressed: () => _cambiarMes(1),
+                  color: const Color.fromARGB(255, 61, 56, 245),
+                ),
+              ],
+            ),
+            
+            const Divider(),
+            
+            // Selector de vista
+            if (!_vistaSubcategorias)
+              Row(
+                children: [
+                  const Icon(Icons.pie_chart, 
+                      color: Color.fromARGB(255, 61, 56, 245), size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Resumen por Categorías',
+                    style: TextStyle(
                       fontSize: 14.0,
                       fontWeight: FontWeight.bold,
                       color: Color.fromARGB(255, 25, 25, 26),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            
+            if (_vistaSubcategorias && _categoriaGraficoSeleccionada != null)
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, size: 20),
+                    onPressed: () {
+                      setState(() {
+                        _vistaSubcategorias = false;
+                        _categoriaGraficoSeleccionada = null;
+                      });
+                    },
+                    color: const Color.fromARGB(255, 61, 56, 245),
+                  ),
+                  Icon(
+                    _obtenerIcono(_categoriaGraficoSeleccionada!),
+                    color: const Color.fromARGB(255, 61, 56, 245),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Subcategorías de $_categoriaGraficoSeleccionada',
+                      style: const TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        color: Color.fromARGB(255, 25, 25, 26),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            
             const SizedBox(height: 10),
             _pieChartIngresos(datos),
             const SizedBox(height: 10),
@@ -869,6 +1073,8 @@ class _IngresosPageState extends State<IngresosPage> {
       const Color(0xff13d38e),
       const Color(0xffff6b6b),
       const Color(0xff4ecdc4),
+      const Color(0xffff9800),
+      const Color(0xff9c27b0),
     ];
 
     final double total = datos.values.reduce((a, b) => a + b);
@@ -879,40 +1085,54 @@ class _IngresosPageState extends State<IngresosPage> {
         ...datos.entries.map((entry) {
           int index = datos.keys.toList().indexOf(entry.key);
           double porcentaje = (entry.value / total) * 100;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-              children: [
-                const SizedBox(width: 10),
-                Icon(
-                  _obtenerIcono(entry.key),
-                  color: colores[index % colores.length],
-                  size: 28,
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.key,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Color.fromARGB(255, 21, 21, 21),
-                        ),
-                      ),
-                      Text(
-                        '\$${entry.value.toStringAsFixed(2)} (${porcentaje.toStringAsFixed(1)}%)',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+          return InkWell(
+            onTap: !_vistaSubcategorias ? () {
+              setState(() {
+                _categoriaGraficoSeleccionada = entry.key;
+                _vistaSubcategorias = true;
+              });
+            } : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  const SizedBox(width: 10),
+                  Icon(
+                    _obtenerIcono(entry.key),
+                    color: colores[index % colores.length],
+                    size: 28,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Color.fromARGB(255, 21, 21, 21),
+                          ),
+                        ),
+                        Text(
+                          '\$${entry.value.toStringAsFixed(2)} (${porcentaje.toStringAsFixed(1)}%)',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!_vistaSubcategorias)
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
+                ],
+              ),
             ),
           );
         }),
