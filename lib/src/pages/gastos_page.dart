@@ -16,7 +16,6 @@ class GastosPage extends StatefulWidget {
 }
 
 class _GastosPageState extends State<GastosPage> {
-  String? _opcionSeleccionadaDropdown;
   String? gastoSeleccionado;
 
 
@@ -105,7 +104,7 @@ class _GastosPageState extends State<GastosPage> {
 
       setState(() {
         // Asegurar que siempre sea una lista válida
-        _gastosList = gastosDelMes ?? [];
+        _gastosList = gastosDelMes ;
         _categorias = categoriasList;
        
         _isLoading = false;
@@ -205,12 +204,19 @@ class _GastosPageState extends State<GastosPage> {
   
 
   // Mostrar selector de fecha
+ 
+  // Mostrar selector de fecha
   Future<void> _seleccionarFecha() async {
+    final DateTime hoy = DateTime.now();
+    final DateTime unAnioAtras = DateTime(hoy.year - 1, hoy.month, hoy.day);
+    
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _fechaSeleccionada,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: _fechaSeleccionada.isAfter(hoy) 
+          ? hoy 
+          : (_fechaSeleccionada.isBefore(unAnioAtras) ? unAnioAtras : _fechaSeleccionada),
+      firstDate: unAnioAtras,  // Solo puede seleccionar desde hace 1 año
+      lastDate: hoy,            // Solo puede seleccionar hasta hoy
       locale: const Locale('es', 'ES'),
       builder: (context, child) {
         return Theme(
@@ -238,7 +244,6 @@ class _GastosPageState extends State<GastosPage> {
   void _seleccionarCategoria(String categoria) {
     setState(() {
       _categoriaController.text = categoria;
-      _opcionSeleccionadaDropdown = categoria;
       _mostrarCategorias = false;
       _subcategoriaController.clear();
     });
@@ -327,7 +332,6 @@ class _GastosPageState extends State<GastosPage> {
       await _firebaseServices.insertGasto(nuevoGasto);
 
       setState(() {
-        _opcionSeleccionadaDropdown = null;
         gastoSeleccionado = null;
         _montoController.clear();
         _detalleController.clear();
@@ -529,9 +533,6 @@ class _GastosPageState extends State<GastosPage> {
                 _mostrarCategorias = false;
               });
             }
-            setState(() {
-              _opcionSeleccionadaDropdown = value.isNotEmpty ? value : null;
-            });
           },
           decoration: InputDecoration(
             border: OutlineInputBorder(

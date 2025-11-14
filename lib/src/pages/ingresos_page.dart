@@ -16,7 +16,7 @@ class IngresosPage extends StatefulWidget {
 }
 
 class _IngresosPageState extends State<IngresosPage> {
-  String? _opcionSeleccionadaDropdown;
+
   String? ingresoSeleccionado;
 
   // Controladores para los campos de texto
@@ -210,12 +210,19 @@ class _IngresosPageState extends State<IngresosPage> {
   }
 
   // Mostrar selector de fecha
+  
+  // Mostrar selector de fecha
   Future<void> _seleccionarFecha() async {
+    final DateTime hoy = DateTime.now();
+    final DateTime unAnioAtras = DateTime(hoy.year - 1, hoy.month, hoy.day);
+    
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _fechaSeleccionada,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: _fechaSeleccionada.isAfter(hoy) 
+          ? hoy 
+          : (_fechaSeleccionada.isBefore(unAnioAtras) ? unAnioAtras : _fechaSeleccionada),
+      firstDate: unAnioAtras,  // Solo puede seleccionar desde hace 1 año
+      lastDate: hoy,            // Solo puede seleccionar hasta hoy
       locale: const Locale('es', 'ES'),
       builder: (context, child) {
         return Theme(
@@ -243,7 +250,6 @@ class _IngresosPageState extends State<IngresosPage> {
   void _seleccionarCategoria(String categoria) {
     setState(() {
       _categoriaController.text = categoria;
-      _opcionSeleccionadaDropdown = categoria;
       _mostrarCategorias = false;
       _subcategoriaController.clear();
     });
@@ -333,7 +339,6 @@ class _IngresosPageState extends State<IngresosPage> {
 
       // Limpiar campos
       setState(() {
-        _opcionSeleccionadaDropdown = null;
         ingresoSeleccionado = null;
         _montoController.clear();
         _detalleController.clear();
@@ -350,7 +355,7 @@ class _IngresosPageState extends State<IngresosPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Ingreso guardado exitosamente'),
+            content: Text('Ingreso guardado exitosamente'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -520,9 +525,6 @@ class _IngresosPageState extends State<IngresosPage> {
                 _mostrarCategorias = false;
               });
             }
-            setState(() {
-              _opcionSeleccionadaDropdown = value.isNotEmpty ? value : null;
-            });
           },
           decoration: InputDecoration(
             border: OutlineInputBorder(

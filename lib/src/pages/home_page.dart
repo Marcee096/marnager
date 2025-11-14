@@ -3,7 +3,11 @@ import 'package:marnager/src/pages/ahorros_page.dart';
 import 'package:marnager/src/pages/gastos_page.dart';
 import 'package:marnager/src/pages/ingresos_page.dart';
 import 'package:fl_chart/fl_chart.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
+import '../services/firebase_services.dart';
+import '../models/ingreso.dart';
+import '../models/gasto.dart';
+import '../models/ahorro.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,11 +18,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _indexInicial = 2; // Inicio como selección inicial
-  late int _mesSeleccionado; // Se inicializa en initState
+  int _mesSeleccionado = DateTime.now().month;
+  int _anioSeleccionado = DateTime.now().year;
   
   // Variables para el carrusel de gráficos
   int _graficoActual = 0; // 0: Ingresos, 1: Gastos, 2: Ahorros
   final List<String> _tiposGrafico = ['Ingresos', 'Gastos', 'Ahorros'];
+
+  // Instancia del servicio de Firebase
+  final FirebaseServices _firebaseServices = FirebaseServices.instance;
+
+  // Datos de Firebase
+  List<Ingreso> _ingresosList = [];
+  List<Gasto> _gastosList = [];
+  List<Ahorro> _ahorrosList = [];
+  bool _isLoading = true;
+
+  // Mapas de íconos
+  final Map<String, IconData> _iconosCategorias = {};
 
   final List<String> _meses = [
     'Enero',
@@ -35,54 +52,203 @@ class _HomePageState extends State<HomePage> {
     'Diciembre',
   ];
 
-  // Datos de ejemplo para las categorías (estos deberían venir de la BD)
-  final Map<String, double> _datosIngresos = {
-    'Invitaciones': 21000,
-    'Joyas': 3000,
-    'Beca': 2000,
-  };
-
-  final Map<String, double> _datosGastos = {
-    'Personales': 21000,
-    'Joyas': 3000,
-    'Invitaciones': 2000,
-  };
-
-  final Map<String, double> _datosAhorros = {
-    'Vacaciones': 21000,
-    'Cumpleaños': 3000,
-    'Fondo de Emergencia': 2000,
-  };
-
-  // Método para obtener el icono según la categoría
-  IconData _obtenerIcono(String categoria) {
-    switch (categoria.toLowerCase()) {
-      case 'invitaciones':
-        return Icons.card_giftcard;
-      case 'joyas':
-        return Icons.diamond;
-      case 'beca':
-      case 'educación':
-        return Icons.school;
-      case 'personales':
-        return Icons.person;
-      case 'vacaciones':
-        return Icons.beach_access;
-      case 'cumpleaños':
-        return Icons.cake;
-      case 'fondo de emergencia':
-        return Icons.security;
-      default:
-        return Icons.attach_money;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    // Inicializar con el mes actual
-    final int mesActual = DateTime.now().month;
-    _mesSeleccionado = mesActual;
+    _inicializar();
+  }
+
+  Future<void> _inicializar() async {
+    await initializeDateFormatting('es_ES', null);
+    _cargarDatosFirebase();
+  }
+
+  // Cargar datos desde Firebase
+  Future<void> _cargarDatosFirebase() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Cargar datos del mes seleccionado
+      final ingresos = await _firebaseServices.getIngresosByMonth(_mesSeleccionado, _anioSeleccionado);
+      final gastos = await _firebaseServices.getGastosByMonth(_mesSeleccionado, _anioSeleccionado);
+      final ahorros = await _firebaseServices.getAhorrosByMonth(_mesSeleccionado, _anioSeleccionado);
+
+      // Asegurar que siempre sean listas válidas
+      final ingresosValidos = ingresos ;
+      final gastosValidos = gastos ;
+      final ahorrosValidos = ahorros ;
+
+      // Asignar íconos
+      for (var ingreso in ingresosValidos) {
+        if (!_iconosCategorias.containsKey(ingreso.categoria)) {
+          _iconosCategorias[ingreso.categoria] = _asignarIcono(ingreso.categoria, 'ingreso');
+        }
+      }
+
+      for (var gasto in gastosValidos) {
+        if (!_iconosCategorias.containsKey(gasto.categoria)) {
+          _iconosCategorias[gasto.categoria] = _asignarIcono(gasto.categoria, 'gasto');
+        }
+      }
+
+      for (var ahorro in ahorrosValidos) {
+        if (!_iconosCategorias.containsKey(ahorro.categoria)) {
+          _iconosCategorias[ahorro.categoria] = _asignarIcono(ahorro.categoria, 'ahorro');
+        }
+      }
+
+      setState(() {
+        _ingresosList = ingresosValidos;
+        _gastosList = gastosValidos;
+        _ahorrosList = ahorrosValidos;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _ingresosList = [];
+        _gastosList = [];
+        _ahorrosList = [];
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar datos: $e')),
+        );
+      }
+    }
+  }
+
+  // Asignar icono según la categoría y tipo
+  IconData _asignarIcono(String categoria, String tipo) {
+    final categoriaLower = categoria.toLowerCase();
+    
+    if (tipo == 'ingreso') {
+      if (categoriaLower.contains('freelance') || categoriaLower.contains('trabajo')) {
+        return Icons.computer;
+      } else if (categoriaLower.contains('retail') || categoriaLower.contains('tienda')) {
+        return Icons.store;
+      } else if (categoriaLower.contains('educación') || categoriaLower.contains('beca')) {
+        return Icons.school;
+      } else if (categoriaLower.contains('evento')) {
+        return Icons.event;
+      } else if (categoriaLower.contains('joya')) {
+        return Icons.diamond;
+      } else if (categoriaLower.contains('consulta')) {
+        return Icons.support_agent;
+      } else if (categoriaLower.contains('inversión')) {
+        return Icons.trending_up;
+      } else {
+        return Icons.attach_money;
+      }
+    } else if (tipo == 'gasto') {
+      if (categoriaLower.contains('personal') || categoriaLower.contains('compras')) {
+        return Icons.shopping_bag;
+      } else if (categoriaLower.contains('comida') || categoriaLower.contains('alimentación')) {
+        return Icons.restaurant;
+      } else if (categoriaLower.contains('transporte')) {
+        return Icons.directions_car;
+      } else if (categoriaLower.contains('salud')) {
+        return Icons.local_hospital;
+      } else if (categoriaLower.contains('educación')) {
+        return Icons.school;
+      } else if (categoriaLower.contains('entretenimiento')) {
+        return Icons.movie;
+      } else if (categoriaLower.contains('servicio')) {
+        return Icons.receipt_long;
+      } else if (categoriaLower.contains('hogar')) {
+        return Icons.home;
+      } else if (categoriaLower.contains('invitación')) {
+        return Icons.card_giftcard;
+      } else if (categoriaLower.contains('joya')) {
+        return Icons.diamond;
+      } else {
+        return Icons.attach_money;
+      }
+    } else if (tipo == 'ahorro') {
+      if (categoriaLower.contains('vacaciones') || categoriaLower.contains('viaje')) {
+        return Icons.flight;
+      } else if (categoriaLower.contains('emergencia') || categoriaLower.contains('fondo')) {
+        return Icons.shield;
+      } else if (categoriaLower.contains('jubilación')) {
+        return Icons.elderly;
+      } else if (categoriaLower.contains('educación')) {
+        return Icons.school;
+      } else if (categoriaLower.contains('casa')) {
+        return Icons.home;
+      } else if (categoriaLower.contains('auto')) {
+        return Icons.directions_car;
+      } else if (categoriaLower.contains('inversión')) {
+        return Icons.trending_up;
+      } else if (categoriaLower.contains('navidad')) {
+        return Icons.card_giftcard;
+      } else if (categoriaLower.contains('boda')) {
+        return Icons.favorite;
+      } else if (categoriaLower.contains('cumpleaños')) {
+        return Icons.cake;
+      } else {
+        return Icons.savings;
+      }
+    }
+    
+    return Icons.category;
+  }
+
+  // Obtener datos del mes seleccionado
+  Map<String, double> _obtenerDatosMes() {
+    double totalIngresos = 0;
+    double totalGastos = 0;
+    double totalAhorros = 0;
+
+    
+      for (var ingreso in _ingresosList) {
+        totalIngresos += ingreso.monto;
+      }
+
+      for (var gasto in _gastosList) {
+        totalGastos += gasto.monto;
+      }
+
+      for (var ahorro in _ahorrosList) {
+        totalAhorros += ahorro.monto;
+      }
+
+    return {
+      'ingresos': totalIngresos,
+      'gastos': totalGastos,
+      'ahorros': totalAhorros,
+    };
+  }
+
+  // Obtener datos para el gráfico según el tipo seleccionado
+  Map<String, double> _obtenerDatosGraficoActual() {
+    Map<String, double> datos = {};
+
+      switch (_graficoActual) {
+        case 0: // Ingresos
+          if (_ingresosList.isNotEmpty) {
+            for (var ingreso in _ingresosList) {
+              datos[ingreso.categoria] = (datos[ingreso.categoria] ?? 0.0) + ingreso.monto;
+            }
+          }
+          break;
+        case 1: // Gastos
+          if (_gastosList.isNotEmpty) {
+            for (var gasto in _gastosList) {
+              datos[gasto.categoria] = (datos[gasto.categoria] ?? 0.0) + gasto.monto;
+            }
+          }
+          break;
+        case 2: // Ahorros
+          if (_ahorrosList.isNotEmpty) {
+            for (var ahorro in _ahorrosList) {
+              datos[ahorro.categoria] = (datos[ahorro.categoria] ?? 0.0) + ahorro.monto;
+            }
+          }
+          break;
+      }
+    return datos;
   }
 
   String _obtenerMesSeleccionado() {
@@ -91,21 +257,27 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _seleccionarMes() async {
     final int mesActual = DateTime.now().month;
+    final int anioActual = DateTime.now().year;
 
-    // Calcular los 5 meses anteriores hasta el actual
-    List<int> mesesDisponibles = [];
-    for (int i = 4; i >= 0; i--) {
+    // Calcular los últimos 12 meses
+    List<Map<String, dynamic>> mesesDisponibles = [];
+    for (int i = 11; i >= 0; i--) {
       int mes = mesActual - i;
-      if (mes > 0) {
-        mesesDisponibles.add(mes);
-      } else {
-        // Si el mes es menor a 1, no lo incluimos (para mantener solo el año actual)
-        break;
+      int anio = anioActual;
+      
+      if (mes <= 0) {
+        mes += 12;
+        anio -= 1;
       }
+      
+      mesesDisponibles.add({
+        'mes': mes,
+        'anio': anio,
+        'nombre': '${_meses[mes - 1]} $anio',
+      });
     }
 
-    // Mostrar diálogo con los meses disponibles
-    final int? mesSeleccionado = await showDialog<int>(
+    final Map<String, dynamic>? mesSeleccionado = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -116,27 +288,28 @@ class _HomePageState extends State<HomePage> {
               shrinkWrap: true,
               itemCount: mesesDisponibles.length,
               itemBuilder: (context, index) {
-                final mes = mesesDisponibles[index];
+                final mesData = mesesDisponibles[index];
+                final isSelected = mesData['mes'] == _mesSeleccionado && 
+                                   mesData['anio'] == _anioSeleccionado;
+                
                 return ListTile(
                   title: Text(
-                    _meses[mes - 1],
+                    mesData['nombre'],
                     style: TextStyle(
-                      fontWeight: mes == _mesSeleccionado
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: mes == _mesSeleccionado
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
                           ? const Color.fromARGB(255, 61, 56, 245)
                           : null,
                     ),
                   ),
                   leading: Icon(
                     Icons.calendar_month,
-                    color: mes == _mesSeleccionado
+                    color: isSelected
                         ? const Color.fromARGB(255, 61, 56, 245)
                         : Colors.grey,
                   ),
                   onTap: () {
-                    Navigator.of(context).pop(mes);
+                    Navigator.of(context).pop(mesData);
                   },
                 );
               },
@@ -154,25 +327,21 @@ class _HomePageState extends State<HomePage> {
 
     if (mesSeleccionado != null) {
       setState(() {
-        _mesSeleccionado = mesSeleccionado;
+        _mesSeleccionado = mesSeleccionado['mes'];
+        _anioSeleccionado = mesSeleccionado['anio'];
       });
+      _cargarDatosFirebase();
     }
   }
-  
-  // Método para obtener datos del mes seleccionado
-  Map<String, double> _obtenerDatosMes() {
-    // BD
-    // Ejemplo
-    double ingresos = 35000 + (_mesSeleccionado * 100); // Datos de ejemplo
-    double gastos = 22000 + (_mesSeleccionado * 50);
-    double ahorros = ingresos - gastos;
 
-    return {'ingresos': ingresos, 'gastos': gastos, 'ahorros': ahorros};
+  IconData _obtenerIcono(String categoria) {
+    return _iconosCategorias[categoria] ?? Icons.category;
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final datos = _obtenerDatosMes();
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hola, Marce', style: TextStyle(color: Colors.white)),
@@ -180,56 +349,70 @@ class _HomePageState extends State<HomePage> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _cargarDatosFirebase,
+            tooltip: 'Recargar datos',
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Funcionalidad en desarrollo')),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.info, color: Colors.white),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Funcionalidad en desarrollo')),
+              );
+            },
           ),
         ],
       ),
-
-      body: ListView(
-        padding: const EdgeInsets.all(10.0),
-        children: [
-          // Row con el mes y el icono del calendario
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _obtenerMesSeleccionado(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 61, 56, 245),
-                ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _cargarDatosFirebase,
+              child: ListView(
+                padding: const EdgeInsets.all(10.0),
+                children: [
+                  // Row con el mes y el icono del calendario
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${_obtenerMesSeleccionado()} $_anioSeleccionado',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: _seleccionarMes,
+                        child: const Icon(
+                          Icons.calendar_month,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                          size: 28,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20.0),
+                  _cardResumen(datos),
+                  const SizedBox(height: 20.0),
+                  _cardAtajos(),
+                  const SizedBox(height: 30.0),
+                  _cardGrafico(datos),
+                  const SizedBox(height: 20.0),
+                  _cardEstadisticas(datos),
+                  const SizedBox(height: 30.0),
+                ],
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: _seleccionarMes,
-                child: const Icon(
-                  Icons.calendar_month,
-                  color: Color.fromARGB(255, 61, 56, 245),
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20.0),
-          // Card de resumen (ahora recibe los datos)
-          _cardResumen(datos),
-          const SizedBox(height: 20.0),
-          // Card de atajos
-          _cardAtajos(),
-          const SizedBox(height: 30.0),
-          // Card de gráfico (debajo de resumen)
-          _cardGrafico(datos),
-          const SizedBox(height: 20.0),
-          _cardFuentesIngresos(),
-          const SizedBox(height: 30.0),
-        ],
-      ),
+            ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _indexInicial,
@@ -246,34 +429,31 @@ class _HomePageState extends State<HomePage> {
             _indexInicial = index;
           });
 
-          // Navegación basada en el índice seleccionado
           switch (index) {
             case 0:
-              // Navegar a página de Ingresos
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => IngresosPage()),
+                MaterialPageRoute(builder: (context) => const IngresosPage()),
               );
               break;
             case 1:
-              // Navegar a página de Gastos
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => GastosPage()),
+                MaterialPageRoute(builder: (context) => const GastosPage()),
               );
               break;
             case 2:
-              // Ya estamos en Inicio
               break;
             case 3:
-              // Navegar a página de Ahorros
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AhorrosPage()),
+                MaterialPageRoute(builder: (context) => const AhorrosPage()),
               );
               break;
             case 4:
-              // Navegar a página de Más opciones
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Funcionalidad en desarrollo')),
+              );
               break;
           }
         },
@@ -294,7 +474,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ajustar firma para recibir datos
   Widget _cardResumen(Map<String, double> datos) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
@@ -305,10 +484,8 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             const SizedBox(height: 20.0),
-            // Contenedor principal con dos columnas
             Row(
               children: [
-                // Columna de textos (lado izquierdo)
                 Expanded(
                   flex: 1,
                   child: Column(
@@ -317,9 +494,7 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const SizedBox(
-                            width: 30,
-                          ), // Padding fijo desde la izquierda
+                          const SizedBox(width: 30),
                           Container(
                             width: 12,
                             height: 12,
@@ -350,9 +525,7 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const SizedBox(
-                            width: 30,
-                          ), // Mismo padding para alineación
+                          const SizedBox(width: 30),
                           Container(
                             width: 12,
                             height: 12,
@@ -383,9 +556,7 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          const SizedBox(
-                            width: 30,
-                          ), // Mismo padding para alineación
+                          const SizedBox(width: 30),
                           Container(
                             width: 12,
                             height: 12,
@@ -415,7 +586,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                // Columna de valores (lado derecho)
                 Expanded(
                   flex: 1,
                   child: Column(
@@ -461,38 +631,25 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-          
           ],
         ),
       ),
     );
   }
-  
-  // Método para obtener datos según el gráfico seleccionado
-  Map<String, double> _obtenerDatosGraficoActual() {
-    switch (_graficoActual) {
-      case 0:
-        return _datosIngresos;
-      case 1:
-        return _datosGastos;
-      case 2:
-        return _datosAhorros;
-      default:
-        return _datosIngresos;
-    }
-  }
 
-  // Nuevo método: grafico de pastel para categorías (estilo actualizado)
   Widget _pieChartCategorias(Map<String, double> datos) {
-    // Si no hay datos, mostrar placeholder  
     if (datos.isEmpty) {
       return const SizedBox(
         height: 200,
-        child: Center(child: Text('Sin datos para mostrar', style: TextStyle(color: Colors.grey))),
+        child: Center(
+          child: Text(
+            'Sin datos para mostrar',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
       );
     }
 
-    // Colores que coinciden con las otras páginas
     final List<Color> colores = [
       const Color(0xff0293ee),
       const Color(0xfff8b250),
@@ -502,7 +659,6 @@ class _HomePageState extends State<HomePage> {
       const Color(0xff4ecdc4),
     ];
 
-    // Calcular el total para los porcentajes
     final double total = datos.values.reduce((a, b) => a + b);
 
     return SizedBox(
@@ -521,9 +677,9 @@ class _HomePageState extends State<HomePage> {
               radius: 40,
               showTitle: true,
               titleStyle: const TextStyle(
-                color: Colors.white, 
-                fontSize: 14, 
-                fontWeight: FontWeight.bold
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
               borderSide: BorderSide.none,
               titlePositionPercentageOffset: 0.5,
@@ -534,13 +690,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Leyenda para las categorías
   Widget _leyendaCategorias(Map<String, double> datos) {
     if (datos.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // Colores que coinciden con el gráfico
     final List<Color> colores = [
       const Color(0xff0293ee),
       const Color(0xfff8b250),
@@ -563,11 +717,9 @@ class _HomePageState extends State<HomePage> {
                 size: 24,
               ),
               const SizedBox(width: 10),
-              // Nombre de la categoría y monto
               Expanded(
                 child: Text(
                   '${entry.key}: \$${entry.value.toStringAsFixed(0)}',
-
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -583,7 +735,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Nueva card que contiene el gráfico con carrusel
   Widget _cardGrafico(Map<String, double> datos) {
     final datosGrafico = _obtenerDatosGraficoActual();
     
@@ -596,7 +747,6 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             // Título dinámico
             Text(
               '${_tiposGrafico[_graficoActual]} por Categoría',
               style: const TextStyle(
@@ -606,7 +756,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 10),
-            // Botones del carrusel
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               child: Row(
@@ -619,10 +768,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 15),
-            // Gráfico de categorías
             _pieChartCategorias(datosGrafico),
             const SizedBox(height: 10),
-            // Leyenda
             _leyendaCategorias(datosGrafico),
           ],
         ),
@@ -630,7 +777,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Método para construir botones del carrusel
   Widget _buildBotonCarrusel(String titulo, int indice) {
     final bool isSelected = _graficoActual == indice;
     
@@ -643,7 +789,7 @@ class _HomePageState extends State<HomePage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
+          color: isSelected
               ? const Color.fromARGB(255, 61, 56, 245)
               : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
@@ -670,12 +816,11 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Botón Ingresos
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => IngresosPage()),
+                  MaterialPageRoute(builder: (context) => const IngresosPage()),
                 );
               },
               child: Column(
@@ -706,12 +851,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            // Botón Gastos
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => GastosPage()),
+                  MaterialPageRoute(builder: (context) => const GastosPage()),
                 );
               },
               child: Column(
@@ -742,12 +886,11 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            // Botón Ahorros
             GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AhorrosPage()),
+                  MaterialPageRoute(builder: (context) => const AhorrosPage()),
                 );
               },
               child: Column(
@@ -778,9 +921,12 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            // Botón Registros
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Funcionalidad en desarrollo')),
+                );
+              },
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -815,7 +961,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _cardFuentesIngresos() {
+  Widget _cardEstadisticas(Map<String, double> datos) {
+    final double balance = datos['ingresos']! - datos['gastos']!;
+    final bool isPositive = balance >= 0;
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
       elevation: 8,
@@ -826,24 +975,58 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Mis fuentes de ingresos',
+              'Balance del mes',
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
                 color: Color.fromARGB(255, 61, 56, 245),
               ),
             ),
-            const SizedBox(height: 10.0),
-            // Aquí puedes agregar una lista o gráficos de las fuentes de ingresos
-            const Text(
-              'Fotos de los ingresos mas el boton para agregar nuevas fuentes',
-              style: TextStyle(fontSize: 16.0),
+            const SizedBox(height: 15.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Balance:',
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      isPositive ? Icons.trending_up : Icons.trending_down,
+                      color: isPositive ? Colors.green : Colors.red,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '\$${balance.abs().toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        color: isPositive ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isPositive
+                  ? '¡Excelente! Tus ingresos superan tus gastos'
+                  : 'Atención: Tus gastos superan tus ingresos',
+              style: TextStyle(
+                fontSize: 13.0,
+                color: isPositive ? Colors.green : Colors.orange,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-  
 }

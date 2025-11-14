@@ -6,6 +6,8 @@ class Ahorro {
   final String subcategoria;
   final double monto;
   final DateTime fecha;
+  final String? detalle;
+
 
   Ahorro({
     required this.id,
@@ -13,6 +15,8 @@ class Ahorro {
     required this.subcategoria,
     required this.monto,
     required this.fecha,
+    this.detalle,
+
   });
 
   /// Convertir el ahorro a Map para Firestore
@@ -22,17 +26,32 @@ class Ahorro {
       'subcategoria': subcategoria,
       'monto': monto,
       'fecha': Timestamp.fromDate(fecha),
+      if (detalle != null && detalle!.isNotEmpty) 'detalle': detalle,
+
     };
   }
 
   /// Crear una instancia de Ahorro desde un Map
   factory Ahorro.fromMap(Map<String, dynamic> map, String id) {
+    final montoValue = map['monto'];
+    final double montoDouble;
+    
+    if (montoValue is int) {
+      montoDouble = montoValue.toDouble();
+    } else if (montoValue is double) {
+      montoDouble = montoValue;
+    } else {
+      montoDouble = 0.0;
+    }
+
     return Ahorro(
       id: id,
-      categoria: map['categoria'] ?? '',
-      subcategoria: map['subcategoria'] ?? '',
-      monto: (map['monto'] as num).toDouble(),
-      fecha: (map['fecha'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      categoria: map['categoria'] as String? ?? '',
+      subcategoria: map['subcategoria'] as String? ?? '',
+      monto: montoDouble,
+      fecha: (map['fecha'] as Timestamp).toDate(),
+      detalle: map['detalle'] as String?,
+      
     );
   }
 
@@ -43,6 +62,8 @@ class Ahorro {
     String? subcategoria,
     double? monto,
     DateTime? fecha,
+    String? detalle,
+    
   }) {
     return Ahorro(
       id: id ?? this.id,
@@ -50,6 +71,8 @@ class Ahorro {
       subcategoria: subcategoria ?? this.subcategoria,
       monto: monto ?? this.monto,
       fecha: fecha ?? this.fecha,
+      detalle: detalle ?? this.detalle,
+      
     );
   }
 }
