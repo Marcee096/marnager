@@ -22,6 +22,21 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
+      case TargetPlatform.iOS:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      case TargetPlatform.macOS:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      case TargetPlatform.windows:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -34,40 +49,21 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: "AIzaSyBCQepQBp5boGKDa-4b8eqidNPjHOhjNE8",
-    authDomain: "marnager-ecf30.firebaseapp.com",
-    projectId: "marnager-ecf30",
-    storageBucket: "marnager-ecf30.firebasestorage.app",
-    messagingSenderId: "216614603367",
-    appId: "1:216614603367:web:0cff121b396161d75322c2"
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyCy3YPf4BmbIqv2gVPyQlOBOdmhzDgBC5M',
+    appId: '1:216614603367:android:83e02b903a42eb585322c2',
+    messagingSenderId: '216614603367',
+    projectId: 'marnager-ecf30',
+    storageBucket: 'marnager-ecf30.firebasestorage.app',
   );
 
-
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB05pLdrwrXpBdYO_HokL9J1LP3DF4jDcg',
-    appId: '1:536957137727:web:7017133bfa4ac46af9598a',
-    messagingSenderId: '536957137727',
-    projectId: 'practico2-f3f38',
-    authDomain: 'practico2-f3f38.firebaseapp.com',
-    storageBucket: 'com.example.marnager',
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBCQepQBp5boGKDa-4b8eqidNPjHOhjNE8',
+    appId: '1:216614603367:web:0cff121b396161d75322c2',
+    messagingSenderId: '216614603367',
+    projectId: 'marnager-ecf30',
+    authDomain: 'marnager-ecf30.firebaseapp.com',
+    storageBucket: 'marnager-ecf30.firebasestorage.app',
   );
 
 }
-//// Import the functions you need from the SDKs you need
-// import { initializeApp } from "firebase/app";
-// // TODO: Add SDKs for Firebase products that you want to use
-// // https://firebase.google.com/docs/web/setup#available-libraries
-
-// // Your web app's Firebase configuration
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBCQepQBp5boGKDa-4b8eqidNPjHOhjNE8",
-//   authDomain: "marnager-ecf30.firebaseapp.com",
-//   projectId: "marnager-ecf30",
-//   storageBucket: "marnager-ecf30.firebasestorage.app",
-//   messagingSenderId: "216614603367",
-//   appId: "1:216614603367:web:0cff121b396161d75322c2"
-// };
-
-// // Initialize Firebase
-// const app = initializeApp(firebaseConfig);

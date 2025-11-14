@@ -70,7 +70,6 @@ class _LoginPageState extends State<LoginPage> {
         password: pass,
       );
       
-      
       setState(() {
         _isLoading = false;
       });
@@ -181,121 +180,106 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height - 
-                           AppBar().preferredSize.height - 
-                           MediaQuery.of(context).padding.top,
-              ),
-              child: IntrinsicHeight(
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 40), 
                     // Logo centrado
                     Center(
-                      
-                        child: ClipRRect(
-                          
-                          child: Image.asset(
-                            'assets/images/logologuin.png',
-                            width: 160,  
-                            height: 90,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              // Si no encuentra la imagen, muestra un ícono
-                              return const Icon(
-                                Icons.account_balance_wallet,
-                                size: 40,
-                                color: Color.fromARGB(255, 61, 56, 245),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    
-                    
-  
-                    const SizedBox(height: 50),
-                    
-                    // Formulario de login
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: TextField(
-                        controller: usuarioController,
-                        decoration: InputDecoration(
-                          labelText: 'Email o usuario',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 96, 93, 93),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          helperText: 'Ej: usuario123 o email@ejemplo.com',
-                          helperStyle: const TextStyle(
-                            fontSize: 11, 
-                            color: Color.fromARGB(214, 226, 223, 223)
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.person_outline,
-                            color: Color.fromARGB(255, 61, 56, 245),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.black),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: TextField(
-                        controller: passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          labelStyle: const TextStyle(
-                            color: Color.fromARGB(255, 96, 93, 93),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.lock_outline,
-                            color: Color.fromARGB(255, 61, 56, 245),
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Funcionalidad en desarrollo'),
-                              ),
+                      child: ClipRRect(
+                        child: Image.asset(
+                          'assets/images/logologuin.png',
+                          width: 160,  
+                          height: 90,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.account_balance_wallet,
+                              size: 40,
+                              color: Colors.white,
                             );
                           },
-                          child: const Text(
-                            "¿Olvidaste tu contraseña?",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.white,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 50),
+                    
+                    // Campo de usuario
+                    TextField(
+                      controller: usuarioController,
+                      decoration: InputDecoration(
+                        labelText: 'Email o usuario',
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 96, 93, 93),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        helperText: 'Ej: usuario123 o email@ejemplo.com',
+                        helperStyle: const TextStyle(
+                          fontSize: 11, 
+                          color: Color.fromARGB(214, 226, 223, 223)
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Campo de contraseña
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Contraseña',
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 96, 93, 93),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Olvidaste tu contraseña
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Funcionalidad en desarrollo'),
                             ),
+                          );
+                        },
+                        child: const Text(
+                          "¿Olvidaste tu contraseña?",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white,
                           ),
                         ),
                       ),
@@ -303,43 +287,42 @@ class _LoginPageState extends State<LoginPage> {
                     
                     const SizedBox(height: 32),
                     
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 30, 26, 165),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 5,
+                    // Botón de iniciar sesión
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 30, 26, 165),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          onPressed: _isLoading ? null : iniciarSesion,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Text(
-                                  'Iniciar sesión',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                          elevation: 5,
                         ),
+                        onPressed: _isLoading ? null : iniciarSesion,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Iniciar sesión',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     
                     const SizedBox(height: 24),
                     
+                    // No tienes cuenta
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -372,8 +355,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 40),
                   ],
                 ),
               ),

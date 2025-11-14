@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Marnager',
       debugShowCheckedModeBanner: false,
       
-      // Agregar estas líneas para configurar las localizaciones
+      // Configurar las localizaciones
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -24,11 +24,8 @@ class MyApp extends StatelessWidget {
         Locale('en', 'US'), // Inglés (opcional)
       ],
       locale: const Locale('es', 'ES'), // Locale por defecto
-      
-      // ...resto de tu configuración (theme, home, routes, etc.)
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        // ...tu tema...
       ),
       home: const LoginPage(),
     );

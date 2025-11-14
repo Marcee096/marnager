@@ -35,10 +35,8 @@ class RegistroPageState extends State<RegistroPage> {
     final pass = passwordController.text.trim();
     final confirm = confirmController.text.trim();
 
-
     // Validar campos vacíos
     if (nombre.isEmpty || usuario.isEmpty || pass.isEmpty || confirm.isEmpty) {
-      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor complete todos los campos')),
       );
@@ -47,7 +45,6 @@ class RegistroPageState extends State<RegistroPage> {
 
     // Validar que las contraseñas coincidan
     if (pass != confirm) {
-  
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Las contraseñas no coinciden')),
       );
@@ -56,7 +53,6 @@ class RegistroPageState extends State<RegistroPage> {
 
     // Validar longitud mínima de contraseña
     if (pass.length < 6) {
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('La contraseña debe tener al menos 6 caracteres')),
       );
@@ -68,16 +64,12 @@ class RegistroPageState extends State<RegistroPage> {
     });
 
     try {
-      
       // Determinar si el usuario ya es un email o no
       String email;
       if (usuario.contains('@')) {
-        // Si ya contiene @, usar como email directamente
         email = usuario;
       } else {
-        // Si no, agregar @app.com
         email = '$usuario@app.com';
-        
       }
       
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -85,7 +77,6 @@ class RegistroPageState extends State<RegistroPage> {
         password: pass,
       );
 
-      
       // Guardar datos en Firestore
       await _db.collection('usuarios').doc(cred.user!.uid).set({
         'nombre': nombre,
@@ -95,14 +86,11 @@ class RegistroPageState extends State<RegistroPage> {
         'creadoEn': Timestamp.now(),
       });
 
-      
-
       setState(() {
         _isLoading = false;
       });
 
       if (mounted) {
-        // Mostrar SnackBar de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registro exitoso'),
@@ -111,12 +99,8 @@ class RegistroPageState extends State<RegistroPage> {
           ),
         );
 
-       
-
-        // Esperar un momento para que se vea el SnackBar
         await Future.delayed(const Duration(seconds: 1));
 
-        // Redirigir al Login
         if (mounted) {
           Navigator.pop(context);
         }
@@ -126,8 +110,6 @@ class RegistroPageState extends State<RegistroPage> {
         _isLoading = false;
       });
 
-     
-      
       String mensaje = 'Error al registrar';
       
       switch (e.code) {
@@ -167,7 +149,6 @@ class RegistroPageState extends State<RegistroPage> {
         _isLoading = false;
       });
 
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -181,8 +162,6 @@ class RegistroPageState extends State<RegistroPage> {
       setState(() {
         _isLoading = false;
       });
-
-    
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -200,7 +179,11 @@ class RegistroPageState extends State<RegistroPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 61, 56, 245),
-      appBar: AppBar(backgroundColor: Colors.white),
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: Stack(
         children: [
           ListView(
@@ -211,6 +194,7 @@ class RegistroPageState extends State<RegistroPage> {
                 width: double.infinity,
                 child: Stack(
                   children: [
+                    // Figuras blancas de fondo
                     Positioned(
                       right: -100,
                       top: -50,
@@ -240,101 +224,245 @@ class RegistroPageState extends State<RegistroPage> {
                         ),
                       ),
                     ),
+                    
+                    // Imagen a la derecha sin contenedor ni bordes
+                    Positioned(
+                      right: 20,
+                      top: 50,
+                      child: Image.asset(
+                        'assets/images/logoregister.png',
+                        width: 140,
+                        height: 90,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.account_circle,
+                            size: 80,
+                            color: Color.fromARGB(255, 61, 56, 245),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
+              
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Campo de nombre
                     TextField(
                       controller: nombreController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
-                        labelStyle: TextStyle(
+                      decoration: InputDecoration(
+                        labelText: 'Nombre completo',
+                        labelStyle: const TextStyle(
                           color: Color.fromARGB(255, 96, 93, 93),
                         ),
                         filled: true,
                         fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.person_outline,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
                       ),
                       style: const TextStyle(color: Colors.black),
                     ),
+                    
                     const SizedBox(height: 16),
+                    
+                    // Campo de usuario
                     TextField(
                       controller: usuarioController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Email o usuario',
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           color: Color.fromARGB(255, 96, 93, 93),
                         ),
                         filled: true,
                         fillColor: Colors.white,
                         helperText: 'Ej: usuario123 o email@ejemplo.com',
-                        helperStyle: TextStyle(fontSize: 11),
+                        helperStyle: const TextStyle(
+                          fontSize: 11,
+                          color: Color.fromARGB(214, 226, 223, 223),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
                       ),
                       style: const TextStyle(color: Colors.black),
                     ),
+                    
                     const SizedBox(height: 16),
+                    
+                    // Campo de contraseña
                     TextField(
                       controller: passwordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Contraseña',
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           color: Color.fromARGB(255, 96, 93, 93),
                         ),
                         filled: true,
                         fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
                       ),
                       obscureText: true,
+                      style: const TextStyle(color: Colors.black),
                     ),
+                    
                     const SizedBox(height: 16),
+                    
+                    // Campo de confirmar contraseña
                     TextField(
                       controller: confirmController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Confirmar contraseña',
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           color: Color.fromARGB(255, 96, 93, 93),
                         ),
                         filled: true,
                         fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Color.fromARGB(255, 61, 56, 245),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 16.0,
+                        ),
                       ),
                       obscureText: true,
+                      style: const TextStyle(color: Colors.black),
                     ),
+                    
                     const SizedBox(height: 32),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12.0, horizontal: 20.0),
-                        backgroundColor: const Color.fromARGB(255, 30, 26, 165),
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: _isLoading ? null : registrarUsuario,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                    
+                    // Botón de registrarse
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 30, 26, 165),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 5,
+                        ),
+                        onPressed: _isLoading ? null : registrarUsuario,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'Registrarme',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            )
-                          : const Text(
-                              "Registrarme",
-                              style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Ya tienes cuenta
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "¿Ya tienes cuenta? ",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text(
+                            "Iniciar sesión",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.white,
                             ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             ],
           ),
+          
           // Indicador de carga en pantalla completa
           if (_isLoading)
             Container(
               color: Colors.black,
               child: const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Registrando usuario...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
