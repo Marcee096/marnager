@@ -344,7 +344,7 @@ class _HomePageState extends State<HomePage> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Hola, Marce', style: TextStyle(color: Colors.white)),
+        title: const Text('Bienvenido', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 61, 56, 245),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [

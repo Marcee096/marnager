@@ -48,7 +48,7 @@ class Ingreso {
       subcategoria: map['subcategoria'] as String? ?? '',
       monto: montoDouble,
       fecha: (map['fecha'] as Timestamp).toDate(),
-      detalle: map['detalle'] as String?, // Agregar campo detalle
+      detalle: map['detalle'] as String?, 
     );
   }
 
