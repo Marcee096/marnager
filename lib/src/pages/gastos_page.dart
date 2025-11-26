@@ -5,6 +5,8 @@ import 'package:marnager/src/pages/ingresos_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/firebase_services.dart';
 import '../models/gasto.dart';
 
@@ -53,6 +55,10 @@ class _GastosPageState extends State<GastosPage> {
   // Mapas de íconos
   final Map<String, IconData> _iconosSubcategorias = {};
   final Map<String, IconData> _iconosCategorias = {};
+  
+  // Para manejo de imágenes
+  File? _imagenSeleccionada;
+  final ImagePicker _picker = ImagePicker();
 
 
   @override
@@ -257,6 +263,155 @@ class _GastosPageState extends State<GastosPage> {
       gastoSeleccionado = subcategoria;
       _mostrarSubcategorias = false;
     });
+  }
+
+  // Seleccionar imagen desde la cámara
+  Future<void> _tomarFoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _imagenSeleccionada = File(image.path);
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('📷 Foto capturada exitosamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al tomar foto: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Seleccionar imagen desde la galería
+  Future<void> _seleccionarImagen(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1800,
+        maxHeight: 1800,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _imagenSeleccionada = File(image.path);
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🖼️ Imagen seleccionada exitosamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Mostrar opciones para adjuntar archivo
+  void _mostrarOpcionesAdjuntar() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt,
+                    color: Color.fromARGB(255, 61, 56, 245),
+                  ),
+                  title: const Text('Tomar foto'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _tomarFoto();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library,
+                    color: Color.fromARGB(255, 61, 56, 245),
+                  ),
+                  title: const Text('Seleccionar de galería'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _seleccionarImagen(ImageSource.gallery);
+                  },
+                ),
+                if (_imagenSeleccionada != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                    ),
+                    title: const Text('Eliminar imagen'),
+                    onTap: () {
+                      setState(() {
+                        _imagenSeleccionada = null;
+                      });
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Imagen eliminada'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
  
@@ -783,21 +938,13 @@ class _GastosPageState extends State<GastosPage> {
                       IconButton(
                         icon: const Icon(Icons.camera_alt, 
                             color: Color.fromARGB(255, 61, 56, 245), size: 20),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Funcionalidad en desarrollo')),
-                          );
-                        },
+                        onPressed: () => _seleccionarImagen(ImageSource.camera),
                       ),
                       Container(width: 1, height: 20, color: Colors.white),
                       IconButton(
                         icon: const Icon(Icons.attach_file, 
                             color: Color.fromARGB(255, 61, 56, 245), size: 20),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Funcionalidad en desarrollo')),
-                          );
-                        },
+                        onPressed: _mostrarOpcionesAdjuntar,
                       ),
                     ],
                   ),
