@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:marnager/src/pages/ahorros_page.dart' show AhorrosPage;
 import 'package:marnager/src/pages/gastos_page.dart';
 import 'package:marnager/src/pages/home_page.dart';
+import 'package:marnager/src/pages/registros_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../services/firebase_services.dart';
 import '../models/ingreso.dart';
@@ -308,6 +311,35 @@ class _IngresosPageState extends State<IngresosPage> {
     }
   }
 
+  // Subir imagen a Firebase Storage
+  Future<String?> _subirImagenAFirebase() async {
+    if (_imagenSeleccionada == null) return null;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return null;
+
+      final String fileName = 'ingresos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final Reference storageRef = FirebaseStorage.instance.ref().child(fileName);
+      
+      final UploadTask uploadTask = storageRef.putFile(_imagenSeleccionada!);
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      
+      return downloadUrl;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al subir imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
   // Seleccionar imagen desde la galería
   Future<void> _seleccionarImagen() async {
     try {
@@ -479,6 +511,12 @@ class _IngresosPageState extends State<IngresosPage> {
         _iconosCategorias[categoria] = _asignarIconoCategoria(categoria);
       }
 
+      // Subir imagen a Firebase Storage si existe
+      String? urlComprobante;
+      if (_imagenSeleccionada != null) {
+        urlComprobante = await _subirImagenAFirebase();
+      }
+
       // Crear el objeto Ingreso
       final nuevoIngreso = Ingreso(
         id: '',
@@ -487,6 +525,7 @@ class _IngresosPageState extends State<IngresosPage> {
         monto: monto,
         fecha: _fechaSeleccionada,
         detalle: detalle.isNotEmpty ? detalle : '',
+        comprobante: urlComprobante,
       );
 
       // Guardar en Firebase
@@ -502,6 +541,7 @@ class _IngresosPageState extends State<IngresosPage> {
         _fechaSeleccionada = DateTime.now();
         _fechaController.text = DateFormat('dd/MM/yyyy').format(_fechaSeleccionada);
         _subcategoriasDisponibles = [];
+        _imagenSeleccionada = null;
       });
 
       // Recargar datos
@@ -612,6 +652,7 @@ class _IngresosPageState extends State<IngresosPage> {
                 children: [
                   _cardCargaIngreso(),
                   _cardGrafico(datosDinamicos),
+                  _cardBotonRegistros(),
                 ],
               ),
             ),
@@ -1322,6 +1363,64 @@ class _IngresosPageState extends State<IngresosPage> {
           ),
         ),
       ],
+    );
+  }
+
+  // Card con botón para ver registros
+  Widget _cardBotonRegistros() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      elevation: 8,
+      shadowColor: Colors.black,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const RegistrosPage(tabInicial: 0),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.list_alt,
+                color: Color.fromARGB(255, 61, 56, 245),
+                size: 30,
+              ),
+              const SizedBox(width: 15),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ver Registros Completos',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 61, 56, 245),
+                    ),
+                  ),
+                  Text(
+                    'Editar, eliminar y gestionar comprobantes',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 10),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Color.fromARGB(255, 61, 56, 245),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

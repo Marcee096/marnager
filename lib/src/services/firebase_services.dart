@@ -137,6 +137,16 @@ class FirebaseServices {
     return docRef.id;
   }
 
+  Future<void> updateGasto(Gasto gasto) async {
+    await _getUserGastosCollection()
+        .doc(gasto.id)
+        .update(gasto.toMap());
+  }
+
+  Future<void> deleteGasto(String id) async {
+    await _getUserGastosCollection().doc(id).delete();
+  }
+
   Future<double> calcularTotalGastosMes(int month, int year) async {
     final gastos = await getGastosByMonth(month, year);
 
@@ -174,6 +184,16 @@ class FirebaseServices {
   Future<String> insertAhorro(Ahorro ahorro) async {
     final docRef = await _getUserAhorrosCollection().add(ahorro.toMap());
     return docRef.id;
+  }
+
+  Future<void> updateAhorro(Ahorro ahorro) async {
+    await _getUserAhorrosCollection()
+        .doc(ahorro.id)
+        .update(ahorro.toMap());
+  }
+
+  Future<void> deleteAhorro(String id) async {
+    await _getUserAhorrosCollection().doc(id).delete();
   }
 
   Future<double> calcularTotalAhorrosMes(int month, int year) async {

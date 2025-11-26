@@ -7,6 +7,7 @@ class Ingreso {
   final double monto;
   final DateTime fecha;
   final String? detalle; // Campo opcional para detalles
+  final String? comprobante; // URL del comprobante/imagen
 
   Ingreso({
     required this.id,
@@ -15,6 +16,7 @@ class Ingreso {
     required this.monto,
     required this.fecha,
     this.detalle,
+    this.comprobante,
   });
 
   /// Convertir el ingreso a Map para Firestore
@@ -25,6 +27,7 @@ class Ingreso {
       'monto': monto,
       'fecha': Timestamp.fromDate(fecha),
       if (detalle != null && detalle!.isNotEmpty) 'detalle': detalle,
+      if (comprobante != null && comprobante!.isNotEmpty) 'comprobante': comprobante,
     };
   }
 
@@ -48,7 +51,8 @@ class Ingreso {
       subcategoria: map['subcategoria'] as String? ?? '',
       monto: montoDouble,
       fecha: (map['fecha'] as Timestamp).toDate(),
-      detalle: map['detalle'] as String?, 
+      detalle: map['detalle'] as String?,
+      comprobante: map['comprobante'] as String?, 
     );
   }
 
@@ -60,6 +64,7 @@ class Ingreso {
     double? monto,
     DateTime? fecha,
     String? detalle,
+    String? comprobante,
   }) {
     return Ingreso(
       id: id ?? this.id,
@@ -68,6 +73,7 @@ class Ingreso {
       monto: monto ?? this.monto,
       fecha: fecha ?? this.fecha,
       detalle: detalle ?? this.detalle,
+      comprobante: comprobante ?? this.comprobante,
     );
   }
 }

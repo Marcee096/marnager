@@ -8,6 +8,7 @@ class Gasto {
   final DateTime fecha;
   final String? detalle; // Campo opcional para detalles
   final String? cuenta; // Campo opcional para cuenta de pago
+  final String? comprobante; // URL del comprobante/imagen
 
   Gasto({
     required this.id,
@@ -17,6 +18,7 @@ class Gasto {
     required this.fecha,
     this.detalle,
     this.cuenta,
+    this.comprobante,
   });
 
   /// Convertir el gasto a Map para Firestore
@@ -28,6 +30,7 @@ class Gasto {
       'fecha': Timestamp.fromDate(fecha),
       if (detalle != null && detalle!.isNotEmpty) 'detalle': detalle,
       if (cuenta != null && cuenta!.isNotEmpty) 'cuenta': cuenta,
+      if (comprobante != null && comprobante!.isNotEmpty) 'comprobante': comprobante,
     };
   }
 
@@ -52,6 +55,7 @@ class Gasto {
       fecha: (map['fecha'] as Timestamp).toDate(),
       detalle: map['detalle'] as String?,
       cuenta: map['cuenta'] as String?,
+      comprobante: map['comprobante'] as String?,
     );
   }
 
@@ -64,6 +68,7 @@ class Gasto {
     DateTime? fecha,
     String? detalle,
     String? cuenta,
+    String? comprobante,
   }) {
     return Gasto(
       id: id ?? this.id,
@@ -73,6 +78,7 @@ class Gasto {
       fecha: fecha ?? this.fecha,
       detalle: detalle ?? this.detalle,
       cuenta: cuenta ?? this.cuenta,
+      comprobante: comprobante ?? this.comprobante,
     );
   }
 }

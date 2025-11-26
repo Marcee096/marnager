@@ -7,7 +7,7 @@ class Ahorro {
   final double monto;
   final DateTime fecha;
   final String? detalle;
-
+  final String? comprobante; // URL del comprobante/imagen
 
   Ahorro({
     required this.id,
@@ -16,7 +16,7 @@ class Ahorro {
     required this.monto,
     required this.fecha,
     this.detalle,
-
+    this.comprobante,
   });
 
   /// Convertir el ahorro a Map para Firestore
@@ -27,7 +27,7 @@ class Ahorro {
       'monto': monto,
       'fecha': Timestamp.fromDate(fecha),
       if (detalle != null && detalle!.isNotEmpty) 'detalle': detalle,
-
+      if (comprobante != null && comprobante!.isNotEmpty) 'comprobante': comprobante,
     };
   }
 
@@ -51,7 +51,7 @@ class Ahorro {
       monto: montoDouble,
       fecha: (map['fecha'] as Timestamp).toDate(),
       detalle: map['detalle'] as String?,
-      
+      comprobante: map['comprobante'] as String?,
     );
   }
 
@@ -63,7 +63,7 @@ class Ahorro {
     double? monto,
     DateTime? fecha,
     String? detalle,
-    
+    String? comprobante,
   }) {
     return Ahorro(
       id: id ?? this.id,
@@ -72,7 +72,7 @@ class Ahorro {
       monto: monto ?? this.monto,
       fecha: fecha ?? this.fecha,
       detalle: detalle ?? this.detalle,
-      
+      comprobante: comprobante ?? this.comprobante,
     );
   }
 }
