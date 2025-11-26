@@ -1,4 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+        
+     <!-- Permisos de cámara -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Permiso para grabar audio (si usás videos o cámara con sonido) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Permisos para acceder a imágenes (galería) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- Android 13+ (para leer imágenes y videos) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    
     <application
         android:label="marnager"
         android:name="${applicationName}"

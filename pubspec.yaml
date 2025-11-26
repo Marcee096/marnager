@@ -21,6 +21,8 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   fluid_dropdown_input: ^1.0.0
+  image_picker: ^1.1.2
+  permission_handler: ^11.4.0
 
 dev_dependencies:
   flutter_test:
